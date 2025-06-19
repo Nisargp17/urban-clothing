@@ -3,6 +3,7 @@ import Comp2 from "./components/Comp2";
 import Comp3 from "./components/Comp3";
 import Comp4 from "./components/Comp4";
 import Hero from "./components/Hero";
+import Shoes from "./components/shoes";
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
       <Comp2 />
       <Comp3 />
       <Comp4 />
+      <Shoes />
     </>
   );
 }
