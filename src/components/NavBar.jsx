@@ -1,7 +1,6 @@
 function NavBar() {
   return (
-    <nav className="flex flex-col justify-between items-center w-[10vw] h-screen absolute py-[2vh]">
-      {/* Name box */}
+    <nav className="flex flex-col justify-between items-center w-[10vw] h-screen z-20 fixed py-[2vh]">
       <div className="mt-[15vh] w-[30vw] h-[8vh] overflow-hidden rotate-270 group relative">
         <div className="transition-transform duration-700 ease-in-out group-hover:-translate-y-[50%]">
           <div className="h-[8vh] flex items-center justify-center">

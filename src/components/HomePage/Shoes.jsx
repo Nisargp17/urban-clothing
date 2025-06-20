@@ -11,7 +11,6 @@ import img5 from "/src/assets/shoe5.jpg";
 import shoelable from "/src/assets/shoelable.svg";
 import circle from "/src/assets/circle.svg";
 import arrow from "/src/assets/arrow.svg";
-import "../index.css";
 
 gsap.registerPlugin(Draggable);
 gsap.registerPlugin(ScrollTrigger);
