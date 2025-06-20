@@ -4,7 +4,7 @@ import arrow from "/src/assets/arrow.svg";
 
 function Footer() {
   return (
-    <section className="h-[60vh] bg-[#f8f5eb] flex justify-between items-center px-[5vw] z-50">
+    <section className="relative  h-[60vh] bg-[#f8f5eb] flex justify-between items-center px-[5vw] z-50">
       <div className="flex flex-col justify-between h-[40vh]">
         <img className="w-[4vw]" src={mail} alt="mail" />
 
@@ -63,7 +63,7 @@ function Footer() {
           </div>
         </div>
 
-        <div className="flex items-center justify-center rotate-[270deg] hover:rotate-[1350deg] hover:scale-110 transition-all duration-700">
+        <div className="flex items-center justify-center rotate-[270deg] hover:rotate-[990deg] hover:scale-110 transition-all duration-1500">
           <div className="w-[5vw] relative">
             <img className="w-full" src={circle} alt="circle" />
             <img
