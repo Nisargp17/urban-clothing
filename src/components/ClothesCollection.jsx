@@ -132,44 +132,54 @@ function ClothedCollection() {
         ))}
       </div>
 
-      <div className="flex justify-end items-center gap-[2vw] pt-[10vh] mr-[10vw]">
-        <div className="flex flex-col items-end gap-2">
-          <div className="text-sm font-bold text-[#141414] tracking-widest">
+      {/* Controls */}
+      <div className="flex flex-col items-center gap-6 pt-[10vh]">
+        {/* Progress Bar */}
+        <div className="relative w-[55vw] h-[5px] bg-[#e0e0e0] overflow-hidden rounded-full">
+          <div
+            className="absolute top-0 left-0 h-full bg-[#141414] rounded-full"
+            style={{
+              width: `${((currentIndex + 1) / totalCards) * 100}%`,
+              transition: "width 0.4s ease",
+            }}
+          ></div>
+        </div>
+
+        {/* Prev / Index / Next Buttons */}
+        <div className="flex justify-center items-center gap-[3vw] mt-4">
+          {/* Prev Button */}
+          <button onClick={handlePrev} disabled={currentIndex === 0}>
+            <div className="w-[5vw] relative hover:rotate-[720deg] hover:scale-110 transition-all duration-1500">
+              <img className="w-full" src={circle} alt="circle" />
+              <img
+                className="absolute rotate-180 top-1/2 left-1/2 w-[50%] translate-x-[-50%] translate-y-[-50%]"
+                src={arrow}
+                alt="arrow"
+              />
+            </div>
+          </button>
+
+          {/* Index in between */}
+          <div className="text-[2vw] font-bold text-[#141414] tracking-widest min-w-[6vw] text-center">
             {String(currentIndex + 1).padStart(2, "0")}/
             {String(totalCards).padStart(2, "0")}
           </div>
-          <div className="h-[150px] w-[3px] bg-[#e0e0e0] relative">
-            <div
-              className="absolute bottom-0 w-full bg-[#141414]"
-              style={{
-                height: `${((currentIndex + 1) / totalCards) * 100}%`,
-                transition: "height 0.4s ease",
-              }}
-            ></div>
-          </div>
+
+          {/* Next Button */}
+          <button
+            onClick={handleNext}
+            disabled={currentIndex === totalCards - 1}
+          >
+            <div className="w-[5vw] relative hover:rotate-[720deg] hover:scale-110 transition-all duration-1500">
+              <img className="w-full" src={circle} alt="circle" />
+              <img
+                className="absolute top-1/2 left-1/2 w-[50%] translate-x-[-50%] translate-y-[-50%]"
+                src={arrow}
+                alt="arrow"
+              />
+            </div>
+          </button>
         </div>
-
-        <button onClick={handlePrev} disabled={currentIndex === 0}>
-          <div className="w-[5vw] relative hover:rotate-[720deg] hover:scale-110 transition-all duration-1500">
-            <img className="w-full" src={circle} alt="circle" />
-            <img
-              className="absolute rotate-180 top-1/2 left-1/2 w-[50%] translate-x-[-50%] translate-y-[-50%]"
-              src={arrow}
-              alt="arrow"
-            />
-          </div>
-        </button>
-
-        <button onClick={handleNext} disabled={currentIndex === totalCards - 1}>
-          <div className="w-[5vw] relative hover:rotate-[720deg] hover:scale-110 transition-all duration-1500">
-            <img className="w-full" src={circle} alt="circle" />
-            <img
-              className="absolute top-1/2 left-1/2 w-[50%] translate-x-[-50%] translate-y-[-50%]"
-              src={arrow}
-              alt="arrow"
-            />
-          </div>
-        </button>
       </div>
     </section>
   );
