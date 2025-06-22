@@ -32,6 +32,7 @@ const shoesData = [
 function ClothedCollection() {
   const scrollContainerRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const currentIndexRef = useRef(0);
   const cardWidthRef = useRef(0);
   const containerOffsetX = useRef(0);
   const totalCards = shoesData.length;
@@ -56,7 +57,7 @@ function ClothedCollection() {
     containerOffsetX.current = initialOffset;
 
     gsap.set(container, {
-      x: -cardWidth * currentIndex + initialOffset,
+      x: -cardWidth * currentIndexRef.current + initialOffset,
     });
 
     const draggable = Draggable.create(container, {
@@ -66,23 +67,34 @@ function ClothedCollection() {
       onRelease: function () {
         const delta = this.getDirection() === "left" ? 1 : -1;
         const newIndex = Math.min(
-          Math.max(currentIndex + delta, 0),
+          Math.max(currentIndexRef.current + delta, 0),
           totalCards - 1
         );
+        currentIndexRef.current = newIndex;
         setCurrentIndex(newIndex);
-        animateToIndex(newIndex);
+        const newX = -cardWidth * newIndex + initialOffset;
+
+        gsap.to(container, {
+          x: newX,
+          duration: 1,
+          ease: "back",
+        });
       },
       onThrowComplete: function () {
         const finalX = container._gsap.x;
         const relativeX = finalX - initialOffset;
         const index = Math.round(-relativeX / cardWidth);
         const clampedIndex = Math.min(Math.max(index, 0), totalCards - 1);
+        currentIndexRef.current = clampedIndex;
         setCurrentIndex(clampedIndex);
-        animateToIndex(clampedIndex);
+        const newX = -cardWidth * clampedIndex + initialOffset;
+        gsap.to(container, {
+          x: newX,
+          duration: 1,
+          ease: "back",
+        });
       },
     })[0];
-
-    draggableRef.current = draggable;
 
     return () => {
       draggable.kill();
@@ -93,8 +105,8 @@ function ClothedCollection() {
     const newX = -cardWidthRef.current * index + containerOffsetX.current;
     gsap.to(scrollContainerRef.current, {
       x: newX,
-      duration: 0.7,
-      ease: "power3.out",
+      duration: 1,
+      ease: "back",
     });
   };
 
@@ -132,9 +144,7 @@ function ClothedCollection() {
         ))}
       </div>
 
-      {/* Controls */}
       <div className="flex flex-col items-center gap-6 pt-[10vh]">
-        {/* Progress Bar */}
         <div className="relative w-[55vw] h-[5px] bg-[#e0e0e0] overflow-hidden rounded-full">
           <div
             className="absolute top-0 left-0 h-full bg-[#141414] rounded-full"
@@ -145,9 +155,7 @@ function ClothedCollection() {
           ></div>
         </div>
 
-        {/* Prev / Index / Next Buttons */}
         <div className="flex justify-center items-center gap-[3vw] mt-4">
-          {/* Prev Button */}
           <button onClick={handlePrev} disabled={currentIndex === 0}>
             <div className="w-[5vw] relative hover:rotate-[720deg] hover:scale-110 transition-all duration-1500">
               <img className="w-full" src={circle} alt="circle" />
@@ -159,13 +167,11 @@ function ClothedCollection() {
             </div>
           </button>
 
-          {/* Index in between */}
           <div className="text-[2vw] font-bold text-[#141414] tracking-widest min-w-[6vw] text-center">
             {String(currentIndex + 1).padStart(2, "0")}/
             {String(totalCards).padStart(2, "0")}
           </div>
 
-          {/* Next Button */}
           <button
             onClick={handleNext}
             disabled={currentIndex === totalCards - 1}
