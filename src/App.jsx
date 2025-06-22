@@ -12,7 +12,7 @@ function App() {
       <GooeyCursor />
       {/* <HomePage /> */}
       <ClothedCollection />
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 }

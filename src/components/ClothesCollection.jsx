@@ -12,6 +12,9 @@ import img6 from "/src/assets/col6.jpg";
 import img7 from "/src/assets/col7.jpg";
 import img8 from "/src/assets/col8.jpg";
 import img9 from "/src/assets/col9.jpg";
+import shoelable from "/src/assets/shoelable.svg";
+import circle from "/src/assets/circle.svg";
+import arrow from "/src/assets/arrow.svg";
 
 gsap.registerPlugin(Draggable, ScrollTrigger);
 
@@ -46,7 +49,6 @@ function ClothedCollection() {
       card.offsetWidth + parseFloat(getComputedStyle(container).gap || "0");
     cardWidthRef.current = cardWidth;
 
-    // Set initial position to center the first card
     const initialOffset =
       window.innerWidth / 2 -
       card.offsetWidth / 2 -
@@ -99,8 +101,8 @@ function ClothedCollection() {
   }, []);
 
   return (
-    <section className="overflow-hidden w-full h-[90vh] relative">
-      <div className="highlighted-box absolute z-10 top-[9.3vh] right-[37vw] border-[5px] border-[#141414] h-[66vh] w-[24.4vw] pointer-events-none"></div>
+    <section className="overflow-hidden w-full h-[100vh] relative">
+      <div className="highlighted-box absolute z-10 top-[9.3vh] right-[37.8vw] border-[5px] border-[#141414] h-[66vh] w-[24.4vw] pointer-events-none"></div>
 
       <div
         ref={scrollContainerRef}
@@ -114,6 +116,24 @@ function ClothedCollection() {
             <img src={shoe.img} alt={`Shoe ${shoe.id}`} />
           </div>
         ))}
+      </div>
+      <div className="flex justify-end pt-[10vh] mr-[10vw] items-center gap-[5vh]">
+        <div className="w-[5vw] relative hover:rotate-[720deg] hover:scale-110 transition-all duration-1500">
+          <img className="w-full" src={circle} alt="circle" />
+          <img
+            className="absolute rotate-180 top-1/2 left-1/2 w-[50%] translate-x-[-50%] translate-y-[-50%]"
+            src={arrow}
+            alt="arrow"
+          />
+        </div>
+        <div className="w-[5vw] relative hover:rotate-[720deg] hover:scale-110 transition-all duration-1500">
+          <img className="w-full" src={circle} alt="circle" />
+          <img
+            className="absolute top-1/2 left-1/2 w-[50%] translate-x-[-50%] translate-y-[-50%]"
+            src={arrow}
+            alt="arrow"
+          />
+        </div>
       </div>
     </section>
   );
