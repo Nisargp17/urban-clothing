@@ -19,35 +19,88 @@ function Shop() {
   const leftRef = useRef(null);
   const rightRef = useRef(null);
 
+  const leftAnim = useRef(null);
+  const rightAnim = useRef(null);
+  const scrollTimeout = useRef(null);
+
   useEffect(() => {
     document.body.style.overflow = "hidden";
 
     const leftDiv = leftRef.current;
     const rightDiv = rightRef.current;
 
-    const itemHeight = leftDiv.querySelector(".item").offsetHeight + 24;
+    const gapVh = 3;
+    const vhInPx = window.innerHeight / 100;
+    const gapPx = gapVh * vhInPx;
+
+    const itemHeight = leftDiv.querySelector(".item").offsetHeight + gapPx;
+
     const totalItems = shoesData.length * 3;
     const totalHeight = itemHeight * totalItems;
 
-    gsap.to(leftDiv, {
+    leftAnim.current = gsap.to(leftDiv, {
       y: `-=${totalHeight}px`,
       duration: 200,
       ease: "none",
       repeat: -1,
+      paused: false,
       modifiers: {
         y: gsap.utils.unitize((y) => parseFloat(y) % totalHeight),
       },
     });
 
-    gsap.to(rightDiv, {
+    rightAnim.current = gsap.to(rightDiv, {
       y: `+=${totalHeight}px`,
       duration: 200,
       ease: "none",
       repeat: -1,
+      paused: false,
       modifiers: {
         y: gsap.utils.unitize((y) => parseFloat(y) % totalHeight),
       },
     });
+
+    const handleScroll = (e) => {
+      e.preventDefault();
+
+      const scrollFactor = 0.05;
+      const direction = e.deltaY > 0 ? 1 : -1;
+      const scrollAmount = direction * itemHeight * scrollFactor;
+
+      leftAnim.current.pause();
+      rightAnim.current.pause();
+
+      gsap.to(leftDiv, {
+        y: `+=${scrollAmount}px`,
+        duration: 1,
+        ease: "power2.out",
+        modifiers: {
+          y: gsap.utils.unitize((y) => parseFloat(y) % totalHeight),
+        },
+      });
+
+      gsap.to(rightDiv, {
+        y: `-=${scrollAmount}px`,
+        duration: 1,
+        ease: "power2.out",
+        modifiers: {
+          y: gsap.utils.unitize((y) => parseFloat(y) % totalHeight),
+        },
+      });
+
+      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+      scrollTimeout.current = setTimeout(() => {
+        leftAnim.current.play();
+        rightAnim.current.play();
+      }, 3000);
+    };
+
+    window.addEventListener("wheel", handleScroll, { passive: false });
+
+    return () => {
+      window.removeEventListener("wheel", handleScroll);
+      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+    };
   }, []);
 
   const extendedLeft = [
