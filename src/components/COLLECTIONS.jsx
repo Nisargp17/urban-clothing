@@ -29,7 +29,7 @@ const shoesData = [
   { id: 9, img: img9 },
 ];
 
-function ClothedCollection() {
+function COLLECTIONS() {
   const scrollContainerRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const currentIndexRef = useRef(0);
@@ -191,4 +191,4 @@ function ClothedCollection() {
   );
 }
 
-export default ClothedCollection;
+export default COLLECTIONS;
