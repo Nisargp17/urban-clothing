@@ -64,7 +64,7 @@ function Comp2() {
 
       <div className="flex justify-center items-center gap-[5vh]">
         <div className="explore-text text-[2vw] hover:underline transition-all duration-1000">
-          EXPLORE
+          <Link to="/COLLECTIONS">EXPLORE</Link>
         </div>
 
         <div className="circle w-[5vw] relative hover:rotate-[720deg] hover:scale-110 transition-all duration-1500">

@@ -118,7 +118,7 @@ function Shoes() {
       </div>
       <div className="flex justify-end pt-[10vh] mr-[10vw] items-center gap-[5vh]">
         <div className="text-[2vw] hover:underline transition-all duration-1000">
-          SHOP ALL
+          <Link to="/shop">SHOP ALL</Link>
         </div>
         <div className="w-[5vw] relative hover:rotate-[720deg] hover:scale-110 transition-all duration-1500">
           <img className="w-full" src={circle} alt="circle" />
