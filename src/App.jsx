@@ -15,7 +15,7 @@ function App() {
       <GooeyCursor />
 
       <Routes>
-        <Route path="/HOME" element={<HomePage />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/COLLECTIONS" element={<COLLECTIONS />} />
       </Routes>

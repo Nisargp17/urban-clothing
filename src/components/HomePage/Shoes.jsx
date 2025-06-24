@@ -11,7 +11,7 @@ import img5 from "/src/assets/shoe5.jpg";
 import shoelable from "/src/assets/shoelable.svg";
 import circle from "/src/assets/circle.svg";
 import arrow from "/src/assets/arrow.svg";
-
+import { Link } from "react-router-dom";
 gsap.registerPlugin(Draggable);
 gsap.registerPlugin(ScrollTrigger);
 

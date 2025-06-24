@@ -4,6 +4,7 @@ import Img1 from "/src/assets/HeroImg1.jpg";
 import Img2 from "/src/assets/HeroImg2.jpg";
 import Img3 from "/src/assets/circle.svg";
 import Img4 from "/src/assets/arrow.svg";
+import { Link } from "react-router-dom";
 
 function Comp2() {
   useEffect(() => {
