@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
- "homepage": "https://nisargp17.github.io/urban-clothing",
+"homepage": "https://nisargp17.github.io/urban-clothing",
 
   "scripts": {
     "dev": "vite",
