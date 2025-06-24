@@ -4,6 +4,10 @@ import Img2 from "/src/assets/shoe2.jpg";
 import Img3 from "/src/assets/shoe3.jpg";
 import Img4 from "/src/assets/shoe4.jpg";
 import Img5 from "/src/assets/shoe5.jpg";
+import Img6 from "/src/assets/shoe6.jpg";
+import Img7 from "/src/assets/shoe7.jpg";
+import Img8 from "/src/assets/shoe8.jpg";
+import Img9 from "/src/assets/shoe9.jpg";
 import shoelable from "/src/assets/shoelable.svg";
 import { gsap } from "gsap";
 
@@ -13,8 +17,11 @@ const shoesData = [
   { id: 3, img: Img3, title: "DURAN", oldPrice: 4800, newPrice: 3300 },
   { id: 4, img: Img4, title: "THE CODE", oldPrice: 4700, newPrice: 2900 },
   { id: 5, img: Img5, title: "CARNERA", oldPrice: 4900, newPrice: 3400 },
+  { id: 6, img: Img6, title: "TUNNY", oldPrice: 4900, newPrice: 3400 },
+  { id: 7, img: Img7, title: "TRESCIA", oldPrice: 4900, newPrice: 3400 },
+  { id: 8, img: Img8, title: "PANTAFACA", oldPrice: 4900, newPrice: 3400 },
+  { id: 9, img: Img9, title: "REVOLTA", oldPrice: 4900, newPrice: 3400 },
 ];
-
 function Shop() {
   const leftRef = useRef(null);
   const rightRef = useRef(null);
