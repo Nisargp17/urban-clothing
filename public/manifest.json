@@ -1,0 +1,17 @@
+{
+  "name": "Urban Clothing — Premium Urban Trekking Footwear",
+  "short_name": "Urban Clothing",
+  "description": "Premium urban trekking footwear. Designed for the modern explorer.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5efe6",
+  "theme_color": "#2a2520",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
