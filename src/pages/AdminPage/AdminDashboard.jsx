@@ -1,27 +1,7 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { PRODUCTS } from '../../data/products';
+import { useGetProductsQuery, useGetOrdersQuery } from '../../store/apiSlice';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-
-function generateMockOrders() {
-  const statuses = ['pending', 'processing', 'shipped', 'delivered'];
-  const orders = [];
-  for (let i = 0; i < 8; i++) {
-    const product = PRODUCTS[i % PRODUCTS.length];
-    orders.push({
-      _id: `order_${i}`,
-      orderId: `URB-2025-${8842 + i}`,
-      customer: ['Alex R.', 'Sam T.', 'Jordan K.', 'Morgan L.', 'Casey W.', 'Taylor P.', 'Riley J.', 'Quinn M.'][i],
-      product: product.title,
-      amount: product.newPrice * (1 + (i % 3)),
-      status: statuses[i % statuses.length],
-      date: new Date(Date.now() - i * 86400000 * 2).toISOString(),
-    });
-  }
-  return orders;
-}
-
-const MOCK_ORDERS = generateMockOrders();
 
 const CHART_DATA = [
   { day: 'Mon', revenue: 42000, orders: 12 },
@@ -33,12 +13,24 @@ const CHART_DATA = [
   { day: 'Sun', revenue: 45000, orders: 15 },
 ];
 
-const STAT_CARDS = [
-  { label: 'Total Orders', value: '156', change: '+12%', positive: true },
-  { label: 'Total Revenue', value: '₹284,750', change: '+8.5%', positive: true },
-  { label: 'Total Products', value: `${PRODUCTS.length}`, change: '+3', positive: true },
-  { label: 'Pending Orders', value: '12', change: '-2', positive: false },
-];
+function generateMockOrders(products = []) {
+  if (!Array.isArray(products) || products.length === 0) return [];
+  const statuses = ['pending', 'processing', 'shipped', 'delivered'];
+  const orders = [];
+  for (let i = 0; i < 8; i++) {
+    const product = products[i % products.length];
+    orders.push({
+      _id: `order_${i}`,
+      orderId: `URB-2025-${8842 + i}`,
+      customer: ['Alex R.', 'Sam T.', 'Jordan K.', 'Morgan L.', 'Casey W.', 'Taylor P.', 'Riley J.', 'Quinn M.'][i],
+      product: product.title || 'Unknown Product',
+      amount: (product.newPrice || product.price || 0) * (1 + (i % 3)),
+      status: statuses[i % statuses.length],
+      date: new Date(Date.now() - i * 86400000 * 2).toISOString(),
+    });
+  }
+  return orders;
+}
 
 const STATUS_STYLES = {
   pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
@@ -62,7 +54,28 @@ function StatCard({ label, value, change, positive }) {
 const MemoStatCard = memo(StatCard);
 
 export default function AdminDashboard() {
-  const recentOrders = MOCK_ORDERS.slice(0, 5);
+  const { data: productsData } = useGetProductsQuery();
+  const { data: ordersData } = useGetOrdersQuery();
+  const products = productsData?.products || productsData || [];
+  const orders = ordersData?.orders || ordersData || [];
+
+  const recentOrders = useMemo(() => {
+    if (orders.length > 0) return orders.slice(0, 5);
+    return generateMockOrders(products).slice(0, 5);
+  }, [orders, products]);
+
+  const statCards = useMemo(() => {
+    const totalOrders = orders.length > 0 ? String(orders.length) : '156';
+    const pendingOrders = orders.length > 0
+      ? String(orders.filter((o) => o.status === 'pending').length)
+      : '12';
+    return [
+      { label: 'Total Orders', value: totalOrders, change: '+12%', positive: true },
+      { label: 'Total Revenue', value: '₹284,750', change: '+8.5%', positive: true },
+      { label: 'Total Products', value: String(products.length || 0), change: '+3', positive: true },
+      { label: 'Pending Orders', value: pendingOrders, change: '-2', positive: false },
+    ];
+  }, [orders, products]);
 
   return (
     <div className="space-y-8">
@@ -73,7 +86,7 @@ export default function AdminDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {STAT_CARDS.map((card) => (
+        {statCards.map((card) => (
           <MemoStatCard key={card.label} {...card} />
         ))}
       </div>

@@ -23,6 +23,9 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.error = null;
       localStorage.setItem('token', action.payload.token);
+      if (action.payload.user) {
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
+      }
     },
     authFailure: (state, action) => {
       state.isLoading = false;
@@ -34,6 +37,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
     },
     updateUser: (state, action) => {
       state.user = { ...state.user, ...action.payload };
@@ -41,8 +45,22 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    rehydrateAuth: (state) => {
+      const token = localStorage.getItem('token');
+      const user = localStorage.getItem('user');
+      if (token && user) {
+        try {
+          state.token = token;
+          state.user = JSON.parse(user);
+          state.isAuthenticated = true;
+        } catch {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      }
+    },
   },
 });
 
-export const { authStart, authSuccess, authFailure, logout, updateUser, clearError } = authSlice.actions;
+export const { authStart, authSuccess, authFailure, logout, updateUser, clearError, rehydrateAuth } = authSlice.actions;
 export default authSlice.reducer;

@@ -43,22 +43,20 @@ export default function AdminLayout() {
 
   return (
     <React.Fragment>
-      <div className="min-h-screen bg-[#f5efe6] flex">
+      <div className="min-h-screen bg-[#f5efe6]">
         {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/30 z-40 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/30 z-40 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-[#2a2520] text-white flex flex-col transition-transform duration-300 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
-      >
-        <div className="p-6 border-b border-white/10">
+        {/* Sidebar — always fixed, visible on desktop */}
+        <aside
+          className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#2a2520] text-white flex flex-col transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+        >
+        <div className="p-6 border-b border-white/10 shrink-0">
           <h1 className="text-lg font-bold tracking-[0.2em]">ADMIN</h1>
           <p className="text-xs text-white/40 mt-1">Urban Clothing</p>
         </div>
@@ -86,7 +84,7 @@ export default function AdminLayout() {
           ))}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 space-y-1">
+        <div className="p-4 border-t border-white/10 space-y-1 shrink-0">
           <Link
             to="/"
             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-white/40 hover:text-[#c4a35a] hover:bg-white/5 transition-all"
@@ -109,7 +107,7 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="md:ml-64 min-h-screen flex flex-col">
         {/* Top bar */}
         <header className="h-16 border-b-2 border-[#2a2520]/10 bg-[#f5efe6] flex items-center justify-between px-6">
           <div className="flex items-center gap-4">

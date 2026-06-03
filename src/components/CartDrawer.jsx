@@ -116,15 +116,15 @@ export function CartDrawer() {
                   className="flex gap-4 pb-4 group"
                 >
                   <Link
-                    to={`/product/${item.id}`}
+                    to={`/product/${item.id || item._id}`}
                     onClick={() => setDrawerOpen(false)}
                     className="w-20 h-20 flex-shrink-0 border-2 border-[#2a2520] overflow-hidden hover:opacity-80 transition-opacity"
                   >
-                    <img src={item.image} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
+                    <img src={item.image || ''} alt={item.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   </Link>
                   <div className="flex-1 min-w-0">
                     <Link
-                      to={`/product/${item.id}`}
+                      to={`/product/${item.id || item._id}`}
                       onClick={() => setDrawerOpen(false)}
                       className="font-semibold text-sm truncate block hover:underline"
                     >

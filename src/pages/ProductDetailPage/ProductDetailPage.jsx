@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import gsap from 'gsap';
-import { PRODUCTS } from '../../data/products';
+import { useGetProductByIdQuery, useGetProductsQuery } from '../../store/apiSlice';
 import { useCartContext, useWishlistContext } from '../../hooks/useRedux';
 import { useRecentlyViewed } from '../../hooks/useRecentlyViewed';
 import { formatPrice } from '../../utils/formatPrice';
@@ -14,6 +14,25 @@ const TABS = [
   { id: 'shipping', label: 'Shipping & Returns' },
   { id: 'reviews', label: 'Reviews' },
 ];
+
+const MOCK_REVIEWS = [
+  { id: 1, name: 'Rahul M.', rating: 5, date: '2 weeks ago', text: 'Best trekking shoes I have owned. The comfort is unreal and they look even better in person.' },
+  { id: 2, name: 'Priya K.', rating: 4, date: '1 month ago', text: 'Great build quality. Took them on a 10km city walk and zero blisters. Sizing is true to fit.' },
+  { id: 3, name: 'Arjun S.', rating: 5, date: '2 months ago', text: 'The attention to detail is incredible. The gold accents pop and the leather feels premium.' },
+  { id: 4, name: 'Neha R.', rating: 4, date: '3 months ago', text: 'Stylish and functional. Got compliments everywhere. Worth the price for the quality.' },
+];
+
+function StarRating({ rating }) {
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <svg key={s} className={`w-3.5 h-3.5 ${s <= rating ? 'text-[#c4a35a]' : 'text-[#2a2520]/15'}`} fill="currentColor" viewBox="0 0 20 20">
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+      ))}
+    </div>
+  );
+}
 
 const FEATURES = [
   'Handcrafted with premium full-grain leather',
@@ -32,20 +51,62 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
   const [added, setAdded] = useState(false);
+  const addedTimerRef = useRef(null);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [sizeError, setSizeError] = useState(false);
   const imgRef = useRef(null);
 
-  const product = PRODUCTS.find((p) => p.id === Number(id));
+  const { data: apiResponse, isLoading, error } = useGetProductByIdQuery(id);
+  const apiProduct = apiResponse?.product || apiResponse;
+  const { data: allProductsData } = useGetProductsQuery();
+  const allProducts = allProductsData?.products || allProductsData || [];
+
+  const product = apiProduct || null;
+
   const relatedProducts = useMemo(
-    () => PRODUCTS.filter((p) => p.id !== Number(id)).slice(0, 4),
-    [id]
+    () => {
+      if (!Array.isArray(allProducts)) return [];
+      return allProducts.filter((p) => (p.id || p._id) !== id).slice(0, 4);
+    },
+    [allProducts, id]
   );
+
+  const recentlyViewed = useMemo(() => {
+    if (!product) return [];
+    const pid = product.id || product._id;
+    const others = recentIds.filter((rid) => rid !== pid).slice(0, 4);
+    return others.map((rid) => {
+      if (!Array.isArray(allProducts)) return null;
+      return allProducts.find((p) => (p.id || p._id) === rid);
+    }).filter(Boolean);
+  }, [recentIds, product, allProducts]);
+
+  useEffect(() => {
+    const pid = product?.id || product?._id;
+    if (pid) {
+      trackView(pid);
+    }
+  }, [product?.id, product?._id, trackView]);
+
+  useEffect(() => {
+    return () => {
+      if (addedTimerRef.current) clearTimeout(addedTimerRef.current);
+    };
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center pt-24">
+        <p className="text-sm opacity-40 tracking-wide animate-pulse">Loading product...</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center pt-24">
         <h1 className="text-4xl font-semibold mb-4">Product Not Found</h1>
+        <p className="text-sm opacity-40 mb-6">{error ? 'Unable to load from server.' : 'This product does not exist.'}</p>
         <button
           onClick={() => navigate('/shop')}
           className="px-8 py-3 bg-[#2a2520] text-white text-sm tracking-[0.2em] hover:bg-[#c4a35a] hover:text-[#2a2520] transition-all"
@@ -55,10 +116,6 @@ export default function ProductDetailPage() {
       </div>
     );
   }
-
-  useEffect(() => {
-    trackView(product.id);
-  }, [product.id, trackView]);
 
   const handleMouseMove = (e) => {
     if (!imgRef.current) return;
@@ -81,24 +138,22 @@ export default function ProductDetailPage() {
     setSizeError(false);
     addToCart(product, quantity, selectedSize);
     setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+    if (addedTimerRef.current) clearTimeout(addedTimerRef.current);
+    addedTimerRef.current = setTimeout(() => setAdded(false), 2000);
   };
 
-  const discount = product.oldPrice
+  const discount = product.oldPrice && product.newPrice != null
     ? Math.round(((product.oldPrice - product.newPrice) / product.oldPrice) * 100)
     : 0;
 
-  const liked = isInWishlist(product.id);
-
-  const recentlyViewed = useMemo(() => {
-    const others = recentIds.filter((rid) => rid !== product.id).slice(0, 4);
-    return others.map((id) => PRODUCTS.find((p) => p.id === id)).filter(Boolean);
-  }, [recentIds, product.id]);
+  const productId = product.id || product._id;
+  const productImage = product.img || product.image || '';
+  const liked = isInWishlist(productId);
 
   return (
     <>
-      <SEO title={product.title} description={product.description} pathname={`/product/${product.id}`} type="product" />
-      <JsonLdProduct name={product.title} description={product.description} image={product.img} price={product.newPrice} />
+      <SEO title={product.title} description={product.description} pathname={`/product/${productId}`} type="product" />
+      <JsonLdProduct name={product.title} description={product.description} image={productImage} price={product.newPrice} />
 
       <div className="min-h-screen pt-16 md:pt-0">
         {/* Breadcrumb */}
@@ -113,18 +168,19 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Hero — split layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+        <div className="grid grid-cols-1 lg:grid-cols-[55fr_45fr] gap-0 max-w-[1600px] mx-auto">
           {/* Image */}
           <div
-            className="relative overflow-hidden bg-[#e8ddd0] cursor-crosshair aspect-square lg:aspect-auto lg:min-h-screen"
+            className="relative overflow-hidden bg-[#e8ddd0] cursor-crosshair aspect-[4/5] sm:aspect-[3/4] lg:aspect-auto lg:h-[82vh] lg:max-h-[780px]"
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
           >
             <img
               ref={imgRef}
-              src={product.img}
+              src={productImage}
               alt={product.title}
-              className="w-full h-full object-cover will-change-transform"
+              className="w-full h-full object-cover object-center will-change-transform"
+              decoding="async"
             />
             {/* Tags overlay */}
             <div className="absolute top-4 left-4 md:top-8 md:left-8 flex gap-2">
@@ -144,7 +200,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Details */}
-          <div className="px-4 md:px-[4vw] py-8 md:py-16 lg:py-24 flex flex-col justify-center">
+          <div className="px-4 md:px-[4vw] py-8 md:py-12 lg:py-16 flex flex-col justify-center">
             <p className="text-[10px] md:text-xs tracking-[0.3em] opacity-40 mb-3">
               {product.category} / {product.season || 'SS/25'}
             </p>
@@ -352,9 +408,35 @@ export default function ProductDetailPage() {
                 </div>
               )}
               {activeTab === 'reviews' && (
-                <div className="text-center py-12">
-                  <p className="text-lg opacity-40 mb-2">No reviews yet</p>
-                  <p className="text-sm opacity-30">Be the first to review this product</p>
+                <div>
+                  {/* Rating summary */}
+                  <div className="flex items-center gap-4 mb-8 pb-6 border-b border-[#2a2520]/10">
+                    <div className="text-4xl font-semibold">4.5</div>
+                    <div>
+                      <StarRating rating={4} />
+                      <p className="text-xs opacity-40 mt-1">Based on {MOCK_REVIEWS.length} reviews</p>
+                    </div>
+                  </div>
+                  {/* Review list */}
+                  <div className="space-y-6">
+                    {MOCK_REVIEWS.map((review) => (
+                      <div key={review.id} className="pb-6 border-b border-[#2a2520]/5 last:border-0">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-[#2a2520]/10 flex items-center justify-center text-xs font-bold">
+                              {review.name.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{review.name}</p>
+                              <StarRating rating={review.rating} />
+                            </div>
+                          </div>
+                          <span className="text-[10px] opacity-30 tracking-wider">{review.date}</span>
+                        </div>
+                        <p className="text-sm opacity-70 leading-relaxed">{review.text}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -371,25 +453,29 @@ export default function ProductDetailPage() {
               </div>
             </div>
             <div className="flex gap-4 md:gap-6 overflow-x-auto hide-scrollbar pb-4">
-              {recentlyViewed.map((p) => (
+              {recentlyViewed.map((p) => {
+                const rvId = p.id || p._id;
+                return (
                 <Link
-                  key={p.id}
-                  to={`/product/${p.id}`}
+                  key={rvId}
+                  to={`/product/${rvId}`}
                   className="group flex-shrink-0 w-[60vw] md:w-[22vw] lg:w-[18vw]"
                 >
-                  <div className="aspect-square overflow-hidden bg-[#e8ddd0] border-2 border-[#2a2520] mb-3">
+                  <div className="aspect-[4/5] overflow-hidden bg-[#e8ddd0] border-2 border-[#2a2520] mb-3">
                     <img
-                      src={p.img}
+                      src={p.img || p.image || ''}
                       alt={p.title}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       loading="lazy"
+                      decoding="async"
                     />
                   </div>
                   <p className="text-xs tracking-[0.2em] opacity-40 mb-1">{p.category}</p>
                   <h3 className="text-lg md:text-xl font-semibold mb-1 group-hover:underline">{p.title}</h3>
                   <p className="text-sm font-medium">{formatPrice(p.newPrice)}</p>
                 </Link>
-              ))}
+              );
+              })}
             </div>
           </div>
         )}
@@ -407,25 +493,29 @@ export default function ProductDetailPage() {
               </Link>
             </div>
             <div className="flex gap-4 md:gap-6 overflow-x-auto hide-scrollbar pb-4">
-              {relatedProducts.map((p) => (
+              {relatedProducts.map((p) => {
+                const rpId = p.id || p._id;
+                return (
                 <Link
-                  key={p.id}
-                  to={`/product/${p.id}`}
+                  key={rpId}
+                  to={`/product/${rpId}`}
                   className="group flex-shrink-0 w-[60vw] md:w-[22vw] lg:w-[18vw]"
                 >
-                  <div className="aspect-square overflow-hidden bg-[#e8ddd0] border-2 border-[#2a2520] mb-3">
+                  <div className="aspect-[4/5] overflow-hidden bg-[#e8ddd0] border-2 border-[#2a2520] mb-3">
                     <img
-                      src={p.img}
+                      src={p.img || p.image || ''}
                       alt={p.title}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       loading="lazy"
+                      decoding="async"
                     />
                   </div>
                   <p className="text-xs tracking-[0.2em] opacity-40 mb-1">{p.category}</p>
                   <h3 className="text-lg md:text-xl font-semibold mb-1 group-hover:underline">{p.title}</h3>
                   <p className="text-sm font-medium">{formatPrice(p.newPrice)}</p>
                 </Link>
-              ))}
+              );
+              })}
             </div>
           </div>
         )}

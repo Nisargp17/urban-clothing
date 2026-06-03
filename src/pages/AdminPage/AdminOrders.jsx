@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { PRODUCTS } from '../../data/products';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { useGetProductsQuery, useGetOrdersQuery } from '../../store/apiSlice';
 import OrderDetailModal from './OrderDetailModal';
 
 const ORDER_STATUSES = ['pending', 'confirmed', 'processing', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'];
@@ -14,7 +14,8 @@ const STATUS_STYLES = {
   cancelled: 'bg-red-100 text-red-800 border-red-300',
 };
 
-function generateMockOrders() {
+function generateMockOrders(products = []) {
+  if (!Array.isArray(products) || products.length === 0) return [];
   const customers = [
     { name: 'Alex Rivera', email: 'alex@example.com', city: 'Mumbai' },
     { name: 'Sam Thomas', email: 'sam@example.com', city: 'Delhi' },
@@ -29,25 +30,40 @@ function generateMockOrders() {
   ];
 
   return customers.map((customer, i) => {
-    const product = PRODUCTS[i % PRODUCTS.length];
+    const product = products[i % products.length];
     return {
       _id: `order_${i}`,
       orderId: `URB-2025-${8842 + i}`,
       customer: customer.name,
       email: customer.email,
       city: customer.city,
-      product: product.title,
-      amount: product.newPrice * (1 + (i % 3)),
+      product: product.title || 'Unknown Product',
+      amount: (product.newPrice || product.price || 0) * (1 + (i % 3)),
       status: ORDER_STATUSES[i % ORDER_STATUSES.length],
       date: new Date(Date.now() - i * 86400000 * 2).toISOString(),
     };
   });
 }
 
-const MOCK_ORDERS = generateMockOrders();
-
 export default function AdminOrders() {
-  const [orders, setOrders] = useState(MOCK_ORDERS);
+  const { data: productsData } = useGetProductsQuery();
+  const { data: ordersData } = useGetOrdersQuery();
+  const products = productsData?.products || productsData || [];
+  const apiOrders = ordersData?.orders || ordersData || [];
+
+  const [orders, setOrders] = useState([]);
+  const hasSetOrders = useRef(false);
+
+  useEffect(() => {
+    if (hasSetOrders.current) return;
+    if (apiOrders.length > 0) {
+      setOrders(apiOrders);
+      hasSetOrders.current = true;
+    } else if (products.length > 0) {
+      setOrders(generateMockOrders(products));
+      hasSetOrders.current = true;
+    }
+  }, [apiOrders, products]);
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -57,9 +73,9 @@ export default function AdminOrders() {
     if (search.trim()) {
       const q = search.toLowerCase();
       return (
-        o.orderId.toLowerCase().includes(q) ||
-        o.customer.toLowerCase().includes(q) ||
-        o.product.toLowerCase().includes(q)
+        o.orderId?.toLowerCase().includes(q) ||
+        o.customer?.toLowerCase().includes(q) ||
+        o.product?.toLowerCase().includes(q)
       );
     }
     return true;

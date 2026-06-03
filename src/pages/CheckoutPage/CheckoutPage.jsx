@@ -27,9 +27,40 @@ export default function CheckoutPage() {
   });
   const [errors, setErrors] = useState({});
 
+  const [couponCode, setCouponCode] = useState('');
+  const [couponApplied, setCouponApplied] = useState(false);
+  const [couponError, setCouponError] = useState('');
+  const [discount, setDiscount] = useState(0);
+
   const shipping = totalPrice >= 2000 ? 0 : 99;
-  const tax = Math.round(totalPrice * 0.18);
-  const grandTotal = totalPrice + shipping + tax;
+  const tax = Math.round((totalPrice - discount) * 0.18);
+  const grandTotal = totalPrice - discount + shipping + tax;
+
+  const handleApplyCoupon = () => {
+    setCouponError('');
+    const code = couponCode.trim().toUpperCase();
+    if (!code) return;
+    if (code === 'URBAN10') {
+      const d = Math.round(totalPrice * 0.10);
+      setDiscount(d);
+      setCouponApplied(true);
+    } else if (code === 'WELCOME20') {
+      const d = Math.round(totalPrice * 0.20);
+      setDiscount(d);
+      setCouponApplied(true);
+    } else {
+      setCouponError('Invalid coupon code');
+      setDiscount(0);
+      setCouponApplied(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponCode('');
+    setDiscount(0);
+    setCouponApplied(false);
+    setCouponError('');
+  };
 
   const handleChange = (e) => {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -73,6 +104,12 @@ export default function CheckoutPage() {
 
     // Save to localStorage for confirmation page
     localStorage.setItem('lastOrder', JSON.stringify(order));
+    // Also append to order history
+    try {
+      const history = JSON.parse(localStorage.getItem('orderHistory') || '[]');
+      history.unshift(order);
+      localStorage.setItem('orderHistory', JSON.stringify(history.slice(0, 20)));
+    } catch { /* ignore */ }
     dispatch(clearCart());
     setLoading(false);
     navigate(`/order-confirmation/${orderId}`);
@@ -191,7 +228,7 @@ export default function CheckoutPage() {
                 {items.map((item) => (
                   <div key={item.cartItemId} className="flex gap-3">
                     <div className="w-14 h-14 border border-[#2a2520]/20 flex-shrink-0 overflow-hidden">
-                      <img src={item.image} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
+                      <img src={item.image || ''} alt={item.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium truncate">{item.title}</p>
@@ -202,11 +239,50 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* Coupon */}
+              <div className="mb-4 pb-4 border-b border-[#2a2520]/10">
+                {!couponApplied ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      placeholder="Coupon code"
+                      className="flex-1 border-2 border-[#2a2520]/20 px-3 py-2 text-sm outline-none focus:border-[#2a2520]"
+                      onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      className="px-4 py-2 border-2 border-[#2a2520] text-xs tracking-wider font-medium hover:bg-[#2a2520] hover:text-white transition-colors"
+                    >
+                      APPLY
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">
+                      <span className="font-medium">{couponCode.toUpperCase()}</span>
+                      <span className="text-green-600 text-xs ml-2">Applied</span>
+                    </span>
+                    <button onClick={handleRemoveCoupon} className="text-xs underline opacity-40 hover:opacity-100">
+                      Remove
+                    </button>
+                  </div>
+                )}
+                {couponError && <p className="text-[10px] text-red-600 mt-1">{couponError}</p>}
+              </div>
+
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between opacity-60">
                   <span>Subtotal</span>
                   <span>{formatPrice(totalPrice)}</span>
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount</span>
+                    <span>-{formatPrice(discount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between opacity-60">
                   <span>Shipping</span>
                   <span>{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>

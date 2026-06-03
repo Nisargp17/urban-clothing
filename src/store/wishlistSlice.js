@@ -5,7 +5,8 @@ const STORAGE_KEY = 'urban_wishlist';
 function loadFromStorage() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
+    const items = saved ? JSON.parse(saved) : [];
+    return Array.isArray(items) ? items.filter((item) => item.id && item.title) : [];
   } catch {
     return [];
   }
@@ -21,12 +22,13 @@ const wishlistSlice = createSlice({
   reducers: {
     addToWishlist: (state, action) => {
       const product = action.payload;
-      if (!state.wishlist.some((item) => item.id === product.id)) {
+      const productId = product.id || product._id;
+      if (!state.wishlist.some((item) => item.id === productId)) {
         state.wishlist.push({
-          id: product.id,
+          id: productId,
           title: product.title,
-          price: product.newPrice,
-          image: product.img,
+          price: product.newPrice || product.price || 0,
+          image: product.img || product.image || '',
           category: product.category,
         });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state.wishlist));
@@ -38,15 +40,16 @@ const wishlistSlice = createSlice({
     },
     toggleWishlist: (state, action) => {
       const product = action.payload;
-      const exists = state.wishlist.some((item) => item.id === product.id);
+      const productId = product.id || product._id;
+      const exists = state.wishlist.some((item) => item.id === productId);
       if (exists) {
-        state.wishlist = state.wishlist.filter((item) => item.id !== product.id);
+        state.wishlist = state.wishlist.filter((item) => item.id !== productId);
       } else {
         state.wishlist.push({
-          id: product.id,
+          id: productId,
           title: product.title,
-          price: product.newPrice,
-          image: product.img,
+          price: product.newPrice || product.price || 0,
+          image: product.img || product.image || '',
           category: product.category,
         });
       }

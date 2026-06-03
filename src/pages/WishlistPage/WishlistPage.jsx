@@ -1,18 +1,21 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useCartContext, useWishlistContext } from '../../hooks/useRedux';
-import { PRODUCTS } from '../../data/products';
+import { useGetProductsQuery } from '../../store/apiSlice';
 import { formatPrice } from '../../utils/formatPrice';
 import { SEO } from '../../components/SEO';
 
 export default function WishlistPage() {
   const { wishlist, removeFromWishlist } = useWishlistContext();
   const { addToCart } = useCartContext();
+  const { data: apiData } = useGetProductsQuery();
+  const products = apiData?.products || apiData || [];
 
   const wishlistProducts = useMemo(() => {
-    const map = new Map(PRODUCTS.map((p) => [p.id, p]));
+    if (!Array.isArray(products)) return [];
+    const map = new Map(products.map((p) => [p.id || p._id, p]));
     return wishlist.map((item) => map.get(item.id)).filter(Boolean);
-  }, [wishlist]);
+  }, [wishlist, products]);
 
   return (
     <>
@@ -49,18 +52,19 @@ export default function WishlistPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {wishlistProducts.map((product) => {
-                const discount = product.oldPrice
+                const discount = product.oldPrice && product.newPrice != null
                   ? Math.round(((product.oldPrice - product.newPrice) / product.oldPrice) * 100)
                   : 0;
                 return (
-                  <div key={product.id} className="group relative border-[3px] border-[#2a2520] bg-[#e8ddd0]">
-                    <Link to={`/product/${product.id}`} className="block">
+                  <div key={product.id || product._id} className="group relative border-[3px] border-[#2a2520] bg-[#e8ddd0]">
+                    <Link to={`/product/${product.id || product._id}`} className="block">
                       <div className="aspect-square overflow-hidden">
                         <img
-                          src={product.img}
+                          src={product.img || product.image || ''}
                           alt={product.title}
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                           loading="lazy"
+                          decoding="async"
                         />
                       </div>
                       <div className="p-4 md:p-5">
@@ -87,7 +91,7 @@ export default function WishlistPage() {
                         ADD TO CART
                       </button>
                       <button
-                        onClick={() => removeFromWishlist(product.id)}
+                        onClick={() => removeFromWishlist(product.id || product._id)}
                         className="w-10 h-10 border-2 border-[#2a2520] flex items-center justify-center hover:bg-[#2a2520] hover:text-white transition-all"
                         aria-label="Remove from wishlist"
                       >

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { SEO } from '../../components/SEO';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { COLLECTIONS } from '../../data/products';
+import { COLLECTIONS } from '../../data/collections';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -379,7 +379,7 @@ export default function CollectionsPage() {
                   onClick={() => handleSelect(c)}
                   className="w-12 h-12 md:w-16 md:h-16 border-2 border-[#2a2520] overflow-hidden hover:opacity-70 transition-opacity"
                 >
-                  <img src={c.img} alt={c.title} className="w-full h-full object-cover" />
+                  <img src={c.img} alt={c.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 </button>
               ))}
             </div>
@@ -401,7 +401,7 @@ export default function CollectionsPage() {
                   onClick={() => handleSelect(c)}
                   className="w-12 h-12 md:w-16 md:h-16 border-2 border-[#2a2520] overflow-hidden hover:opacity-70 transition-opacity"
                 >
-                  <img src={c.img} alt={c.title} className="w-full h-full object-cover" />
+                  <img src={c.img} alt={c.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 </button>
               ))}
             </div>

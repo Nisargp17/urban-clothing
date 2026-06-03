@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { SEO } from '../../components/SEO';
+import { ScrollReveal } from '../../components/ScrollReveal';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
@@ -28,13 +29,15 @@ export default function ContactPage() {
       <div className="min-h-screen pt-20 md:pt-24">
         <div className="px-4 md:px-[6vw] max-w-6xl mx-auto">
           {/* Header */}
-          <div className="mb-12 md:mb-16">
-            <p className="text-[10px] md:text-xs tracking-[0.3em] opacity-40 mb-2">GET IN TOUCH</p>
-            <h1 className="text-4xl md:text-6xl font-semibold leading-[0.95] mb-3">Contact</h1>
-            <p className="text-sm md:text-base opacity-60 max-w-md">
-              Questions, support, wholesale inquiries — we&apos;d love to hear from you.
-            </p>
-          </div>
+          <ScrollReveal>
+            <div className="mb-12 md:mb-16">
+              <p className="text-[10px] md:text-xs tracking-[0.3em] opacity-40 mb-2">GET IN TOUCH</p>
+              <h1 className="text-4xl md:text-6xl font-semibold leading-[0.95] mb-3">Contact</h1>
+              <p className="text-sm md:text-base opacity-60 max-w-md">
+                Questions, support, wholesale inquiries — we&apos;d love to hear from you.
+              </p>
+            </div>
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20">
             {/* Info column */}

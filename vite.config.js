@@ -14,13 +14,18 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // Split vendor code into chunks
           if (id.includes('node_modules')) {
             if (id.includes('react-router-dom') || id.includes('@remix-run')) {
               return 'vendor-router';
             }
+            if (id.includes('recharts')) {
+              return 'vendor-charts';
+            }
             if (id.includes('gsap')) {
               return 'vendor-gsap';
+            }
+            if (id.includes('@reduxjs/toolkit') || id.includes('react-redux')) {
+              return 'vendor-redux';
             }
             if (id.includes('react-helmet-async')) {
               return 'vendor-helmet';
@@ -34,6 +39,8 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 500,
+    modulePreload: { polyfill: true },
+    cssMinify: 'lightningcss',
   },
   // Prefetch lazy-loaded chunks on idle
   esbuild: {

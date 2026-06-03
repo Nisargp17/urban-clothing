@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import { useEffect, useState, useRef, Suspense, lazy } from 'react';
+import { useDispatch } from 'react-redux';
 import { HelmetProvider } from 'react-helmet-async';
+import { rehydrateAuth } from './store/authSlice';
 import './App.css';
 import Navbar from './components/NavBar';
 import GooeyCursor from './components/GooeyCursor';
@@ -33,6 +35,7 @@ const WishlistPage = lazy(() => import('./pages/WishlistPage/WishlistPage'));
 const TrackOrderPage = lazy(() => import('./pages/TrackOrderPage/TrackOrderPage'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage/CheckoutPage'));
 const OrderConfirmationPage = lazy(() => import('./pages/CheckoutPage/OrderConfirmationPage'));
+const OrderHistoryPage = lazy(() => import('./pages/OrderHistoryPage/OrderHistoryPage'));
 
 // Admin pages (separate chunk)
 const AdminLayout = lazy(() => import('./pages/AdminPage/AdminLayout'));
@@ -131,6 +134,7 @@ function AnimatedRoutes() {
           <Route path="/track-order" element={<TrackOrderPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
+          <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
@@ -139,10 +143,16 @@ function AnimatedRoutes() {
 }
 
 function MainApp() {
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   useLenis();
   useWebVitals();
+
+  // Rehydrate auth from localStorage on app load
+  useEffect(() => {
+    dispatch(rehydrateAuth());
+  }, [dispatch]);
 
   return (
     <>

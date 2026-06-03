@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
-import { PRODUCTS } from '../../data/products';
+import { useGetProductsQuery } from '../../store/apiSlice';
 import { formatPrice } from '../../utils/formatPrice';
 import { SEO } from '../../components/SEO';
 import { TextScramble } from '../../components/TextScramble';
@@ -23,9 +23,10 @@ function hashToNumber(str, max) {
   return Math.abs(hash) % max;
 }
 
-function generateMockOrder(orderId) {
-  const productIndex = hashToNumber(orderId, PRODUCTS.length);
-  const product = PRODUCTS[productIndex];
+function generateMockOrder(orderId, products = []) {
+  if (!Array.isArray(products) || products.length === 0) return null;
+  const productIndex = hashToNumber(orderId, products.length);
+  const product = products[productIndex];
   const stageIndex = Math.min(hashToNumber(orderId + 'stage', STAGES.length), 3); // max "out for delivery"
   const baseDate = new Date();
   baseDate.setDate(baseDate.getDate() - (STAGES.length - stageIndex));
@@ -59,6 +60,9 @@ export default function TrackOrderPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const resultRef = useRef(null);
+  const trackTimerRef = useRef(null);
+  const { data: apiData } = useGetProductsQuery();
+  const products = apiData?.products || apiData || [];
 
   const handleTrack = (e) => {
     e.preventDefault();
@@ -71,8 +75,9 @@ export default function TrackOrderPage() {
     setOrder(null);
 
     // Simulate API delay
-    setTimeout(() => {
-      const mock = generateMockOrder(orderId.trim());
+    if (trackTimerRef.current) clearTimeout(trackTimerRef.current);
+    trackTimerRef.current = setTimeout(() => {
+      const mock = generateMockOrder(orderId.trim(), products);
       setOrder(mock);
       setLoading(false);
     }, 800);
@@ -87,6 +92,12 @@ export default function TrackOrderPage() {
       );
     }
   }, [order]);
+
+  useEffect(() => {
+    return () => {
+      if (trackTimerRef.current) clearTimeout(trackTimerRef.current);
+    };
+  }, []);
 
   return (
     <>
@@ -154,7 +165,7 @@ export default function TrackOrderPage() {
 
               <div className="flex items-center gap-4 md:gap-6 pb-6 border-b border-[#2a2520]/10">
                 <div className="w-20 h-20 md:w-24 md:h-24 border-2 border-[#2a2520] overflow-hidden flex-shrink-0">
-                  <img src={order.product.img} alt={order.product.title} className="w-full h-full object-cover" />
+                  <img src={order.product.img || order.product.image || ''} alt={order.product.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs tracking-[0.2em] opacity-40 mb-1">{order.product.category}</p>
@@ -164,7 +175,7 @@ export default function TrackOrderPage() {
                     <span className="opacity-30">|</span>
                     <span className="opacity-60">Size: {order.size}</span>
                     <span className="opacity-30">|</span>
-                    <span className="font-medium">{formatPrice(order.product.newPrice * order.quantity)}</span>
+                    <span className="font-medium">{formatPrice((order.product.newPrice || order.product.price || 0) * order.quantity)}</span>
                   </div>
                 </div>
               </div>
@@ -175,7 +186,7 @@ export default function TrackOrderPage() {
                   <p className="text-sm md:text-base font-medium">{order.estimatedDelivery}</p>
                 </div>
                 <Link
-                  to={`/product/${order.product.id}`}
+                  to={`/product/${order.product.id || order.product._id}`}
                   className="text-xs tracking-[0.15em] underline opacity-50 hover:opacity-100 transition-opacity"
                 >
                   VIEW PRODUCT →

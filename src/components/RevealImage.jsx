@@ -37,7 +37,7 @@ export function RevealImage({ src, alt, className = '', direction = 'left' }) {
 
   return (
     <div ref={containerRef} className={`overflow-hidden ${className}`}>
-      <img src={src} alt={alt} className="w-full h-full object-cover" loading="lazy" />
+      <img src={src} alt={alt} className="w-full h-full object-cover" loading="lazy" decoding="async" />
     </div>
   );
 }

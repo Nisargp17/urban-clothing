@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import mail from '/src/assets/email.svg';
 import circle from '/src/assets/circle.svg';
@@ -30,6 +30,13 @@ function HoverLink({ label }) {
 function Footer() {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const subscribeTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (subscribeTimerRef.current) clearTimeout(subscribeTimerRef.current);
+    };
+  }, []);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -40,7 +47,8 @@ function Footer() {
     if (email.trim()) {
       setSubscribed(true);
       setEmail('');
-      setTimeout(() => setSubscribed(false), 5000);
+      if (subscribeTimerRef.current) clearTimeout(subscribeTimerRef.current);
+      subscribeTimerRef.current = setTimeout(() => setSubscribed(false), 5000);
     }
   };
 
@@ -55,7 +63,7 @@ function Footer() {
   return (
     <footer className="relative min-h-[40vh] md:h-[60vh] bg-[#ede6da] flex flex-col md:flex-row justify-between items-start md:items-center px-6 md:px-[5vw] py-8 md:py-0 z-50 gap-8 md:gap-0">
       <div className="flex flex-col justify-between h-auto md:h-[40vh] gap-6 md:gap-0">
-        <img className="w-8 md:w-[4vw]" src={mail} alt="mail" loading="lazy" />
+        <img className="w-8 md:w-[4vw]" src={mail} alt="mail" loading="lazy" decoding="async" />
 
         <div>
           <div className="text-xs md:text-[1vw] text-gray-700 mb-2 tracking-wider">
@@ -119,12 +127,13 @@ function Footer() {
           aria-label="Scroll to top"
         >
           <div className="w-10 md:w-[5vw] relative">
-            <img className="w-full" src={circle} alt="circle" loading="lazy" />
+            <img className="w-full" src={circle} alt="circle" loading="lazy" decoding="async" />
             <img
               className="absolute top-1/2 left-1/2 w-[50%] -translate-x-1/2 -translate-y-1/2"
               src={arrow}
               alt="arrow"
               loading="lazy"
+              decoding="async"
             />
           </div>
         </button>

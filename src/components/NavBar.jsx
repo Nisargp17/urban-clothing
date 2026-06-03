@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useCartContext, useWishlistContext } from '../hooks/useRedux';
+import { useAuth } from '../hooks/useAuth';
 
 const NAV_LINKS = [
   { label: 'Home', path: '/' },
@@ -16,7 +17,8 @@ function Navbar({ onSearchClick }) {
   const { totalItems, toggleDrawer } = useCartContext();
   const { count: wishlistCount } = useWishlistContext();
   const location = useLocation();
-  const isAdmin = useSelector((state) => state.auth.user?.isAdmin);
+  const { user, isAuthenticated, logout } = useAuth();
+  const isAdmin = user?.isAdmin;
 
   return (
     <>
@@ -72,15 +74,29 @@ function Navbar({ onSearchClick }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
-            <Link to="/login" className="opacity-50 hover:opacity-100 transition-opacity text-[11px] tracking-[0.15em] font-medium">
-              ACCOUNT
-            </Link>
-            {isAdmin && (
-              <Link
-                to="/admin"
-                className="text-[10px] tracking-[0.15em] font-bold text-[#c4a35a] bg-[#2a2520] px-2.5 py-1 rounded-md hover:bg-[#c4a35a] hover:text-[#2a2520] transition-all"
-              >
-                ADMIN
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2">
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="text-[10px] tracking-[0.15em] font-bold text-[#c4a35a] bg-[#2a2520] px-2.5 py-1 rounded-md hover:bg-[#c4a35a] hover:text-[#2a2520] transition-all"
+                  >
+                    ADMIN
+                  </Link>
+                )}
+                <button
+                  onClick={logout}
+                  className="opacity-50 hover:opacity-100 transition-opacity p-1"
+                  title="Sign out"
+                >
+                  <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <Link to="/login" className="opacity-50 hover:opacity-100 transition-opacity text-[11px] tracking-[0.15em] font-medium">
+                ACCOUNT
               </Link>
             )}
             <Link to="/wishlist" className="relative opacity-50 hover:opacity-100 transition-opacity p-1">
@@ -162,20 +178,37 @@ function Navbar({ onSearchClick }) {
                 {link.label.toUpperCase()}
               </Link>
             ))}
-            <Link
-              to="/login"
-              onClick={() => setMobileOpen(false)}
-              className="block px-3 py-2.5 text-sm font-medium tracking-wider rounded-lg hover:bg-[#2a2520]/5 active:bg-[#2a2520]/10 active:scale-[0.98] transition-all duration-200"
-            >
-              ACCOUNT
-            </Link>
-            {isAdmin && (
+            {isAuthenticated ? (
+              <>
+                <div className="block px-3 py-2.5 text-sm font-medium tracking-wider rounded-lg bg-[#2a2520]/5">
+                  {user?.name?.toUpperCase() || 'USER'}
+                </div>
+                <button
+                  onClick={() => {
+                    logout();
+                    setMobileOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2.5 text-sm font-medium tracking-wider rounded-lg hover:bg-[#2a2520]/5 active:bg-[#2a2520]/10 active:scale-[0.98] transition-all duration-200"
+                >
+                  LOGOUT
+                </button>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setMobileOpen(false)}
+                    className="block px-3 py-2.5 text-sm font-bold tracking-wider rounded-lg bg-[#2a2520] text-[#c4a35a] hover:bg-[#c4a35a] hover:text-[#2a2520] active:scale-[0.98] transition-all duration-200"
+                  >
+                    ADMIN
+                  </Link>
+                )}
+              </>
+            ) : (
               <Link
-                to="/admin"
+                to="/login"
                 onClick={() => setMobileOpen(false)}
-                className="block px-3 py-2.5 text-sm font-bold tracking-wider rounded-lg bg-[#2a2520] text-[#c4a35a] hover:bg-[#c4a35a] hover:text-[#2a2520] active:scale-[0.98] transition-all duration-200"
+                className="block px-3 py-2.5 text-sm font-medium tracking-wider rounded-lg hover:bg-[#2a2520]/5 active:bg-[#2a2520]/10 active:scale-[0.98] transition-all duration-200"
               >
-                ADMIN
+                ACCOUNT
               </Link>
             )}
           </div>

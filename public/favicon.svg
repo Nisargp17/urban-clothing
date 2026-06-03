@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Dark stamp background — inverted site palette for bold tab presence -->
+  <rect width="512" height="512" rx="128" fill="#2a2520"/>
+
+  <!-- Cream U mark — thick geometric ring, square terminals (editorial) -->
+  <path d="M 110 60 L 110 352 Q 110 442 256 442 Q 402 442 402 352 L 402 60 L 320 60 L 320 328 Q 320 360 288 360 L 224 360 Q 192 360 192 328 L 192 60 Z" fill="#f5efe6"/>
+
+  <!-- Gold summit dot — the single accent, like a trail marker -->
+  <circle cx="256" cy="476" r="16" fill="#c4a35a"/>
+</svg>

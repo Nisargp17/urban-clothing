@@ -7,20 +7,50 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+.pnp
+.pnp.js
+
+# Build outputs
 dist
 dist-ssr
+build
+
+# Local env files
 *.local
+.env
+.env.*
+!.env.example
+
+# Rollup visualizer (build artifact)
+stats.html
+
+# Testing
+coverage
+*.lcov
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-*.env*
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Cache
+.eslintcache
+.cache
+.parcel-cache
+
+# Temporary files
+*.tmp
+*.temp

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { PRODUCTS } from '../data/products';
+import { useGetProductsQuery } from '../store/apiSlice';
 import { formatPrice } from '../utils/formatPrice';
 
 function useDebounce(value, delay = 200) {
@@ -16,25 +16,31 @@ export function SearchOverlay({ isOpen, onClose }) {
   const [query, setQuery] = useState('');
   const inputRef = useRef(null);
   const debouncedQuery = useDebounce(query, 150);
+  const { data: apiData } = useGetProductsQuery();
+  const products = apiData?.products || apiData || [];
 
   const results = useMemo(() => {
-    if (!debouncedQuery.trim()) return [];
+    if (!debouncedQuery.trim() || !Array.isArray(products)) return [];
     const q = debouncedQuery.toLowerCase();
-    return PRODUCTS.filter((p) =>
-      p.title.toLowerCase().includes(q) ||
+    return products.filter((p) =>
+      p.title?.toLowerCase().includes(q) ||
       p.tags?.some((t) => t.toLowerCase().includes(q))
     ).slice(0, 5);
-  }, [debouncedQuery]);
+  }, [debouncedQuery, products]);
 
   useEffect(() => {
+    let timer = null;
     if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 100);
+      timer = setTimeout(() => inputRef.current?.focus(), 100);
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
       setQuery('');
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+      if (timer) clearTimeout(timer);
+    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -94,13 +100,13 @@ export function SearchOverlay({ isOpen, onClose }) {
             )}
             {results.map((product) => (
               <Link
-                key={product.id}
-                to={`/product/${product.id}`}
+                key={product.id || product._id}
+                to={`/product/${product.id || product._id}`}
                 onClick={onClose}
                 className="flex items-center gap-4 p-3 border-2 border-transparent hover:border-[#2a2520] hover:bg-[#e8ddd0]/30 transition-all group"
               >
                 <div className="w-16 h-16 border-2 border-[#2a2520] overflow-hidden flex-shrink-0">
-                  <img src={product.img} alt={product.title} className="w-full h-full object-cover" loading="lazy" />
+                  <img src={product.img || product.image || ''} alt={product.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate group-hover:underline">{product.title}</p>

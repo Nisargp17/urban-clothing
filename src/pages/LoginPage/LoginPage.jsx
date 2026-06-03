@@ -1,19 +1,20 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SEO } from '../../components/SEO';
-import { PRODUCTS } from '../../data/products';
-
-const HERO_PRODUCT = PRODUCTS[0];
+import heroImg from '/src/assets/shoe1.jpg';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+  const { login, isLoading, error } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 1500);
+    await login({
+      email: formData.email,
+      password: formData.password,
+    });
   };
 
   const inputClasses = (field) =>
@@ -30,7 +31,7 @@ export default function LoginPage() {
         {/* Left — Editorial Image */}
         <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
           <img
-            src={HERO_PRODUCT.img}
+            src={heroImg}
             alt="Urban footwear"
             className="absolute inset-0 w-full h-full object-cover"
           />
@@ -86,6 +87,10 @@ export default function LoginPage() {
                   placeholder="Min. 6 characters"
                 />
               </div>
+
+              {error && (
+                <p className="text-xs text-red-600 tracking-wide">{error}</p>
+              )}
 
               <button
                 type="submit"

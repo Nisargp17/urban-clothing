@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SEO } from '../../components/SEO';
-import { PRODUCTS } from '../../data/products';
-
-const HERO_PRODUCT = PRODUCTS[2];
+import heroImg from '/src/assets/shoe3.jpg';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
-  const [isLoading, setIsLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   const [formError, setFormError] = useState('');
+  const { register, isLoading, error } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,8 +17,11 @@ export default function RegisterPage() {
       setFormError('Passwords do not match');
       return;
     }
-    setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 1500);
+    await register({
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+    });
   };
 
   const inputClasses = (field) =>
@@ -36,7 +38,7 @@ export default function RegisterPage() {
         {/* Left — Editorial Image */}
         <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
           <img
-            src={HERO_PRODUCT.img}
+            src={heroImg}
             alt="Urban footwear"
             className="absolute inset-0 w-full h-full object-cover"
           />
@@ -126,8 +128,8 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {formError && (
-                <p className="text-xs text-red-600 tracking-wide">{formError}</p>
+              {(formError || error) && (
+                <p className="text-xs text-red-600 tracking-wide">{formError || error}</p>
               )}
 
               <button

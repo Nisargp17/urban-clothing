@@ -23,7 +23,20 @@ export const apiSlice = createApi({
   endpoints: (builder) => ({
     // Products
     getProducts: builder.query({
-      query: () => '/products',
+      query: (params = {}) => {
+        const searchParams = new URLSearchParams();
+        if (params.page) searchParams.append('page', params.page);
+        if (params.limit) searchParams.append('limit', params.limit);
+        if (params.category) searchParams.append('category', params.category);
+        if (params.search) searchParams.append('search', params.search);
+        if (params.sort) searchParams.append('sort', params.sort);
+        const qs = searchParams.toString();
+        return qs ? `/products?${qs}` : '/products';
+      },
+      providesTags: ['Product'],
+    }),
+    getFeaturedProducts: builder.query({
+      query: () => '/products/featured',
       providesTags: ['Product'],
     }),
     getProductById: builder.query({
@@ -31,18 +44,18 @@ export const apiSlice = createApi({
       providesTags: (result, error, id) => [{ type: 'Product', id }],
     }),
     createProduct: builder.mutation({
-      query: (body) => ({
+      query: (formData) => ({
         url: '/products',
         method: 'POST',
-        body,
+        body: formData,
       }),
       invalidatesTags: ['Product'],
     }),
     updateProduct: builder.mutation({
-      query: ({ id, ...body }) => ({
+      query: ({ id, formData }) => ({
         url: `/products/${id}`,
         method: 'PUT',
-        body,
+        body: formData,
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Product', id }],
     }),
@@ -96,6 +109,7 @@ export const apiSlice = createApi({
 
 export const {
   useGetProductsQuery,
+  useGetFeaturedProductsQuery,
   useGetProductByIdQuery,
   useCreateProductMutation,
   useUpdateProductMutation,

@@ -26,7 +26,7 @@ export const ProductCard = memo(function ProductCard({ product, showAddToCart = 
   const { addToCart } = useCartContext();
   const { toggleWishlist, isInWishlist } = useWishlistContext();
   const { loaded, onLoad } = useImageLoad();
-  const liked = isInWishlist(product.id);
+  const liked = isInWishlist(product.id || product._id);
 
   const handleAddToCart = useCallback((e) => {
     e.preventDefault();
@@ -40,7 +40,7 @@ export const ProductCard = memo(function ProductCard({ product, showAddToCart = 
     toggleWishlist(product);
   }, [toggleWishlist, product]);
 
-  const discount = product.oldPrice
+  const discount = product.oldPrice && product.newPrice != null
     ? Math.round(((product.oldPrice - product.newPrice) / product.oldPrice) * 100)
     : 0;
 
@@ -49,7 +49,7 @@ export const ProductCard = memo(function ProductCard({ product, showAddToCart = 
   return (
     <TiltCard maxTilt={6} className="group">
       <Link
-        to={`/product/${product.id}`}
+        to={`/product/${product.id || product._id}`}
         data-cursor="VIEW"
         className="relative flex flex-col items-center border-[3px] border-[#2a2520] bg-[#e8ddd0] p-3 md:p-4 transition-all duration-300 hover:shadow-[6px_6px_0px_0px_#2a2520]"
       >
@@ -96,7 +96,7 @@ export const ProductCard = memo(function ProductCard({ product, showAddToCart = 
 
       <div className={`w-full aspect-square overflow-hidden mb-3 md:mb-4 ${!loaded ? 'shimmer' : ''}`}>
         <img
-          src={product.img}
+          src={product.img || product.image || ''}
           alt={product.title}
           onLoad={onLoad}
           className={`w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 ${loaded ? 'opacity-100' : 'opacity-0'}`}

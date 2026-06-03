@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { Draggable } from 'gsap/Draggable';
-import { PRODUCTS } from '../../data/products';
+import { useGetFeaturedProductsQuery } from '../../store/apiSlice';
 import { useWishlistContext } from '../../hooks/useRedux';
 import { useImageLoad } from '../../hooks/useImageLoad';
 import { formatPrice } from '../../utils/formatPrice';
@@ -15,7 +15,9 @@ function FeaturedCard({ product, isActive }) {
   const cardRef = useRef(null);
   const imgRef = useRef(null);
   const { toggleWishlist, isInWishlist } = useWishlistContext();
-  const liked = isInWishlist(product.id);
+  const productId = product.id || product._id;
+  const productImage = product.img || product.image || '';
+  const liked = isInWishlist(productId);
 
   const handleWishlist = (e) => {
     e.preventDefault();
@@ -44,13 +46,13 @@ function FeaturedCard({ product, isActive }) {
 
   const { loaded, onLoad } = useImageLoad();
 
-  const discount = product.oldPrice
+  const discount = product.oldPrice && product.newPrice != null
     ? Math.round(((product.oldPrice - product.newPrice) / product.oldPrice) * 100)
     : 0;
 
   return (
     <Link
-      to={`/product/${product.id}`}
+      to={`/product/${productId}`}
       ref={cardRef}
       data-cursor="EXPLORE"
       onMouseMove={handleMouseMove}
@@ -64,7 +66,7 @@ function FeaturedCard({ product, isActive }) {
       <div className={`absolute inset-0 overflow-hidden ${!loaded ? 'shimmer' : ''}`}>
         <img
           ref={imgRef}
-          src={product.img}
+          src={productImage}
           alt={product.title}
           onLoad={onLoad}
           className={`w-full h-full object-cover will-change-transform transition-opacity duration-700 ${loaded ? 'opacity-100' : 'opacity-0'}`}
@@ -145,10 +147,12 @@ export function FeaturedProducts() {
   const gapRef = useRef(0);
   const progressRef = useRef(null);
 
-  const featured = PRODUCTS.filter((p) => p.isFeatured).slice(0, 5);
+  const { data: apiFeatured } = useGetFeaturedProductsQuery();
+  const apiProducts = apiFeatured?.products || apiFeatured || [];
+  const featured = apiProducts.slice(0, 5);
 
   const updateProgress = useCallback((index) => {
-    if (progressRef.current) {
+    if (progressRef.current && featured.length > 0) {
       const pct = ((index + 1) / featured.length) * 100;
       gsap.to(progressRef.current, { scaleX: pct / 100, duration: 0.5, ease: 'power2.out' });
     }
@@ -156,7 +160,7 @@ export function FeaturedProducts() {
 
   const getIndexFromX = useCallback((x) => {
     const step = itemWidthRef.current + gapRef.current;
-    if (!step) return 0;
+    if (!step || featured.length === 0) return 0;
     const index = Math.round(-x / step);
     return Math.min(Math.max(index, 0), featured.length - 1);
   }, [featured.length]);
@@ -174,7 +178,7 @@ export function FeaturedProducts() {
 
   const snapToIndex = useCallback((index) => {
     const container = scrollContainerRef.current;
-    if (!container) return;
+    if (!container || featured.length === 0) return;
     const clamped = Math.min(Math.max(index, 0), featured.length - 1);
     setActiveIndex(clamped);
     updateProgress(clamped);
@@ -184,7 +188,7 @@ export function FeaturedProducts() {
 
   useEffect(() => {
     const container = scrollContainerRef.current;
-    if (!container) return;
+    if (!container || featured.length === 0) return;
 
     const parentWidth = container.parentElement.clientWidth;
     const containerWidth = container.scrollWidth;
@@ -260,7 +264,7 @@ export function FeaturedProducts() {
           className={`flex w-max gap-3 md:gap-5 hide-scrollbar pl-[15vw] md:pl-[33vw] lg:pl-[35vw] pr-[15vw] md:pr-[33vw] lg:pr-[35vw] pb-4 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         >
           {featured.map((product, i) => (
-            <FeaturedCard key={product.id} product={product} isActive={i === activeIndex} />
+            <FeaturedCard key={product.id || product._id} product={product} isActive={i === activeIndex} />
           ))}
         </div>
       </div>
@@ -314,8 +318,8 @@ export function FeaturedProducts() {
               SHOP ALL
             </Link>
             <Link to="/shop" className="w-10 h-10 md:w-12 md:h-12 relative hover:rotate-[360deg] hover:scale-110 transition-all duration-700 flex-shrink-0">
-              <img className="w-full h-full" src={circle} alt="" loading="lazy" />
-              <img className="absolute top-1/2 left-1/2 w-[50%] -translate-x-1/2 -translate-y-1/2" src={arrow} alt="" loading="lazy" />
+              <img className="w-full h-full" src={circle} alt="" loading="lazy" decoding="async" />
+              <img className="absolute top-1/2 left-1/2 w-[50%] -translate-x-1/2 -translate-y-1/2" src={arrow} alt="" loading="lazy" decoding="async" />
             </Link>
           </div>
         </div>

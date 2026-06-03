@@ -61,7 +61,7 @@ export default function OrderConfirmationPage() {
             {order.items.map((item) => (
               <div key={item.cartItemId} className="flex gap-3">
                 <div className="w-12 h-12 border border-[#2a2520]/20 flex-shrink-0 overflow-hidden">
-                  <img src={item.image} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
+                  <img src={item.image || ''} alt={item.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">{item.title}</p>

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
-import { HERO_IMAGES } from '../../data/products';
+import { HERO_IMAGES } from '../../data/collections';
 import circle from '/src/assets/circle.svg';
 import arrow from '/src/assets/arrow.svg';
 
@@ -67,8 +67,8 @@ export function FeaturedCategories() {
           <Link to="/collections">EXPLORE</Link>
         </div>
         <Link to="/collections" className="circle-btn w-[8vw] md:w-[5vw] relative opacity-0 hover:rotate-[720deg] hover:scale-110 transition-all duration-1500">
-          <img className="w-full" src={circle} alt="circle" />
-          <img className="absolute top-1/2 left-1/2 w-[50%] -translate-x-1/2 -translate-y-1/2" src={arrow} alt="arrow" />
+          <img className="w-full" src={circle} alt="circle" loading="lazy" decoding="async" />
+          <img className="absolute top-1/2 left-1/2 w-[50%] -translate-x-1/2 -translate-y-1/2" src={arrow} alt="arrow" loading="lazy" decoding="async" />
         </Link>
       </div>
     </section>

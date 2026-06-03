@@ -25,4 +25,14 @@
     <priority>0.5</priority>
     <changefreq>monthly</changefreq>
   </url>
+  <url>
+    <loc>https://urbanclothing.com/track-order</loc>
+    <priority>0.5</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://urbanclothing.com/orders</loc>
+    <priority>0.3</priority>
+    <changefreq>weekly</changefreq>
+  </url>
 </urlset>

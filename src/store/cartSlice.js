@@ -15,7 +15,8 @@ function calculateTotals(items) {
 function loadFromStorage() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
+    const items = saved ? JSON.parse(saved) : [];
+    return Array.isArray(items) ? items.filter((item) => item.id && item.title && item.price != null) : [];
   } catch {
     return [];
   }
@@ -38,19 +39,20 @@ const cartSlice = createSlice({
   reducers: {
     addToCart: (state, action) => {
       const { product, quantity = 1, size = '' } = action.payload;
+      const productId = product.id || product._id;
       const existingIndex = state.items.findIndex(
-        (item) => item.id === product.id && item.size === size
+        (item) => item.id === productId && item.size === size
       );
 
       if (existingIndex >= 0) {
         state.items[existingIndex].quantity += quantity;
       } else {
         state.items.push({
-          cartItemId: `${product.id}-${size}`,
-          id: product.id,
+          cartItemId: `${productId}-${size}`,
+          id: productId,
           title: product.title,
           price: product.newPrice || product.price,
-          image: product.img || product.images?.[0],
+          image: product.img || product.image || product.images?.[0] || '',
           quantity,
           size,
         });

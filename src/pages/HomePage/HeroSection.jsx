@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { Link } from 'react-router-dom';
 import { MagneticButton } from '../../components/MagneticButton';
-import { HERO_IMAGES } from '../../data/products';
+import { HERO_IMAGES } from '../../data/collections';
 
 export function HeroSection() {
   const containerRef = useRef(null);

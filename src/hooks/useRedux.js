@@ -42,7 +42,7 @@ export function useWishlistContext() {
     wishlist,
     count: wishlist.length,
     toggleWishlist: (product) => dispatch(toggleWishlist(product)),
-    isInWishlist: (productId) => wishlist.some((item) => item.id === productId),
+    isInWishlist: (productId) => wishlist.some((item) => item.id === productId || item._id === productId),
   };
 }
 

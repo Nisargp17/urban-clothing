@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 export function SEO({ title, description, pathname = '', type = 'website', noindex = false }) {
   const siteUrl = 'https://urbanclothing.com';
   const fullUrl = `${siteUrl}${pathname}`;
-  const fullTitle = title ? `${title} — Urban Clothing` : 'Urban Clothing — Premium Urban Trekking Footwear';
+  const fullTitle = 'Urban Clothing';
 
   return (
     <Helmet>
