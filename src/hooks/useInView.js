@@ -18,7 +18,7 @@ export function useInView(ref, options = {}) {
 
     observer.observe(ref.current);
     return () => observer.disconnect();
-  }, [ref, options.once, options.threshold]);
+  }, [ref, options]);
 
   return options.once ? hasBeenInView.current || isInView : isInView;
 }

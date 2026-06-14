@@ -50,14 +50,14 @@ export function CartDrawer() {
       {/* Drawer */}
       <div
         ref={drawerRef}
-        className="fixed top-0 right-0 h-full w-full max-w-md bg-[#ede6da] border-l-[3px] border-[#2a2520] z-50"
+        className="fixed top-0 right-0 h-full w-full max-w-md bg-[#f5efe6] border-l-[3px] border-[#2a2520] z-50"
         style={{ transform: 'translateX(100%)' }}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-[#2a2520]/10">
             <div>
-              <h2 className="text-xl md:text-2xl font-semibold tracking-tight">Your Cart</h2>
+              <h2 className="text-xl md:text-2xl font-semibold tracking-tight">Your Kit</h2>
               <p className="text-xs opacity-60 mt-1">{totalItems} {totalItems === 1 ? 'item' : 'items'}</p>
             </div>
             <button
@@ -103,10 +103,10 @@ export function CartDrawer() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                   </svg>
                 </div>
-                <p className="text-lg opacity-60 mb-1">Your cart is empty</p>
-                <p className="text-sm opacity-40 mb-6">Discover our latest collection</p>
+                <p className="text-lg opacity-60 mb-1">Your kit is at base camp.</p>
+                <p className="text-sm opacity-40 mb-6">Gear up before you head out.</p>
                 <Button variant="primary" className="px-8 py-2 text-sm" onClick={() => setDrawerOpen(false)}>
-                  Continue Shopping
+                  EXPLORE THE KIT
                 </Button>
               </div>
             ) : (
@@ -166,7 +166,7 @@ export function CartDrawer() {
 
           {/* Footer */}
           {items.length > 0 && (
-            <div className="border-t border-[#2a2520]/10 p-6 space-y-3 bg-[#ede6da]">
+            <div className="border-t border-[#2a2520]/10 p-6 space-y-3 bg-[#f5efe6]">
               <div className="flex justify-between text-sm opacity-60">
                 <span>Subtotal</span>
                 <span>{formatPrice(totalPrice)}</span>

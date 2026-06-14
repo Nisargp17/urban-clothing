@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import { useGetProductByIdQuery, useGetProductsQuery } from '../../store/apiSlice';
 import { useCartContext, useWishlistContext } from '../../hooks/useRedux';
 import { useRecentlyViewed } from '../../hooks/useRecentlyViewed';
+import { useKitFly } from '../../context/KitFlyContext';
 import { formatPrice } from '../../utils/formatPrice';
 import { SEO } from '../../components/SEO';
 import { JsonLdProduct } from '../../components/JsonLd';
@@ -47,6 +48,7 @@ export default function ProductDetailPage() {
   const { addToCart } = useCartContext();
   const { toggleWishlist, isInWishlist } = useWishlistContext();
   const { trackView, recentIds } = useRecentlyViewed();
+  const { trigger: kitFly } = useKitFly();
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
@@ -55,11 +57,12 @@ export default function ProductDetailPage() {
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [sizeError, setSizeError] = useState(false);
   const imgRef = useRef(null);
+  const heroContainerRef = useRef(null);
 
   const { data: apiResponse, isLoading, error } = useGetProductByIdQuery(id);
   const apiProduct = apiResponse?.product || apiResponse;
   const { data: allProductsData } = useGetProductsQuery();
-  const allProducts = allProductsData?.products || allProductsData || [];
+  const allProducts = useMemo(() => allProductsData?.products || allProductsData || [], [allProductsData]);
 
   const product = apiProduct || null;
 
@@ -81,12 +84,21 @@ export default function ProductDetailPage() {
     }).filter(Boolean);
   }, [recentIds, product, allProducts]);
 
+  const productId = product?.id || product?._id;
   useEffect(() => {
-    const pid = product?.id || product?._id;
-    if (pid) {
-      trackView(pid);
+    if (productId) {
+      trackView(productId);
     }
-  }, [product?.id, product?._id, trackView]);
+  }, [productId, trackView]);
+
+  // FLIP entrance animation on hero image
+  useEffect(() => {
+    if (!product || !heroContainerRef.current) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return;
+    const el = heroContainerRef.current;
+    gsap.fromTo(el, { scale: 0.85, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: 'power3.out', delay: 0.1 });
+  }, [product]);
 
   useEffect(() => {
     return () => {
@@ -136,6 +148,7 @@ export default function ProductDetailPage() {
       return;
     }
     setSizeError(false);
+    if (imgRef.current) kitFly(imgRef.current);
     addToCart(product, quantity, selectedSize);
     setAdded(true);
     if (addedTimerRef.current) clearTimeout(addedTimerRef.current);
@@ -146,7 +159,6 @@ export default function ProductDetailPage() {
     ? Math.round(((product.oldPrice - product.newPrice) / product.oldPrice) * 100)
     : 0;
 
-  const productId = product.id || product._id;
   const productImage = product.img || product.image || '';
   const liked = isInWishlist(productId);
 
@@ -155,7 +167,7 @@ export default function ProductDetailPage() {
       <SEO title={product.title} description={product.description} pathname={`/product/${productId}`} type="product" />
       <JsonLdProduct name={product.title} description={product.description} image={productImage} price={product.newPrice} />
 
-      <div className="min-h-screen pt-16 md:pt-0">
+      <div className="min-h-screen pt-16 md:pt-0 product-ambience">
         {/* Breadcrumb */}
         <div className="px-4 md:px-[4vw] pt-20 md:pt-24 pb-4">
           <div className="flex items-center gap-2 text-xs md:text-sm opacity-40">
@@ -171,6 +183,7 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[55fr_45fr] gap-0 max-w-[1600px] mx-auto">
           {/* Image */}
           <div
+            ref={heroContainerRef}
             className="relative overflow-hidden bg-[#e8ddd0] cursor-crosshair aspect-[4/5] sm:aspect-[3/4] lg:aspect-auto lg:h-[82vh] lg:max-h-[780px]"
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
@@ -179,18 +192,18 @@ export default function ProductDetailPage() {
               ref={imgRef}
               src={productImage}
               alt={product.title}
-              className="w-full h-full object-cover object-center will-change-transform"
+              className="w-full h-full object-cover object-center will-change-transform image-breathe"
               decoding="async"
             />
             {/* Tags overlay */}
             <div className="absolute top-4 left-4 md:top-8 md:left-8 flex gap-2">
               {product.tags?.[0] && (
-                <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] px-3 py-1 bg-[#c4a35a] text-[#2a2520]">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] px-3 py-1 bg-[#c4a35a] text-[#2a2520]">
                   {product.tags[0]}
                 </span>
               )}
               {discount > 0 && (
-                <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] px-3 py-1 bg-red-600 text-white">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] px-3 py-1 bg-red-600 text-white">
                   -{discount}%
                 </span>
               )}
@@ -201,7 +214,7 @@ export default function ProductDetailPage() {
 
           {/* Details */}
           <div className="px-4 md:px-[4vw] py-8 md:py-12 lg:py-16 flex flex-col justify-center">
-            <p className="text-[10px] md:text-xs tracking-[0.3em] opacity-40 mb-3">
+            <p className="text-xs tracking-[0.3em] opacity-40 mb-3">
               {product.category} / {product.season || 'SS/25'}
             </p>
             <h1 className="text-[12vw] md:text-[5vw] lg:text-[4vw] font-semibold leading-[0.9] tracking-tight mb-6">
@@ -214,7 +227,7 @@ export default function ProductDetailPage() {
               )}
               <span className="text-3xl md:text-4xl font-medium">{formatPrice(product.newPrice)}</span>
               {discount > 0 && (
-                <span className="text-[10px] md:text-xs font-bold tracking-[0.2em] px-2 py-0.5 bg-[#c4a35a] text-[#2a2520]">
+                <span className="text-xs font-bold tracking-[0.2em] px-2 py-0.5 bg-[#c4a35a] text-[#2a2520]">
                   SAVE {discount}%
                 </span>
               )}
@@ -246,10 +259,10 @@ export default function ProductDetailPage() {
             {product.sizes?.length > 0 && (
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-3">
-                  <label className="text-[10px] md:text-xs tracking-[0.2em] opacity-40">SELECT SIZE</label>
+                  <label className="text-xs tracking-[0.2em] opacity-40">SELECT SIZE</label>
                   <button
                     onClick={() => setSizeGuideOpen(true)}
-                    className="text-[10px] md:text-xs tracking-[0.15em] underline opacity-40 hover:opacity-80 transition-opacity"
+                    className="text-xs tracking-[0.15em] underline opacity-40 hover:opacity-80 transition-opacity"
                   >
                     SIZE GUIDE
                   </button>
@@ -305,7 +318,7 @@ export default function ProductDetailPage() {
                     : 'bg-[#2a2520] text-white hover:bg-[#c4a35a] hover:text-[#2a2520]'
                 }`}
               >
-                {product.stock <= 0 ? 'OUT OF STOCK' : added ? 'ADDED ✓' : 'ADD TO CART'}
+                {product.stock <= 0 ? 'OUT OF STOCK' : added ? 'ADDED ✓' : 'ADD TO KIT'}
               </button>
               <button
                 onClick={() => toggleWishlist(product)}
@@ -323,7 +336,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Trust badges */}
-            <div className="flex flex-wrap gap-4 text-[10px] md:text-xs tracking-wider opacity-40">
+            <div className="flex flex-wrap gap-4 text-xs tracking-wider opacity-40">
               <span className="flex items-center gap-1">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -336,6 +349,29 @@ export default function ProductDetailPage() {
                 </svg>
                 30-DAY RETURNS
               </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Storytelling — The Journey */}
+        <div className="px-4 md:px-[4vw] py-12 md:py-20 border-t border-[#2a2520]/10 bg-[#f5efe6]">
+          <div className="max-w-4xl">
+            <p className="text-xs tracking-[0.2em] text-[#c4a35a] mb-3">THE JOURNEY</p>
+            <h3 className="text-2xl md:text-3xl font-semibold mb-4">Engineered for the Unplanned</h3>
+            <p className="text-sm opacity-60 leading-relaxed mb-6 max-w-2xl">
+              Every pair begins with a single question: what happens at kilometer 14, when the pavement ends and the trail begins? We design for that exact moment. The leather is sourced from tanneries that have operated for over a century. The sole is molded from a compound developed for military-grade durability. The stitching is reinforced at every stress point because we know that the unplanned is not an exception — it is the entire point.
+            </p>
+            <div className="grid grid-cols-3 gap-4 text-center max-w-lg">
+              {[
+                { num: '14km', label: 'Unplanned range' },
+                { num: '100+', label: 'Years of leather craft' },
+                { num: '3x', label: 'Reinforced stitching' },
+              ].map((s) => (
+                <div key={s.label} className="bg-white p-4 border border-[#2a2520]/10">
+                  <p className="text-xl font-bold text-[#c4a35a]">{s.num}</p>
+                  <p className="text-[10px] tracking-wider opacity-40 mt-1 uppercase">{s.label}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -371,7 +407,7 @@ export default function ProductDetailPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] md:text-xs tracking-[0.2em] opacity-40 mb-4">FEATURES</p>
+                    <p className="text-xs tracking-[0.2em] opacity-40 mb-4">FEATURES</p>
                     <ul className="space-y-3">
                       {FEATURES.map((feature, i) => (
                         <li key={i} className="flex items-start gap-3 text-sm opacity-70">
@@ -448,7 +484,7 @@ export default function ProductDetailPage() {
           <div className="px-4 md:px-[4vw] py-12 md:py-20 border-t border-[#2a2520]/10">
             <div className="flex items-end justify-between mb-8">
               <div>
-                <p className="text-[10px] md:text-xs tracking-[0.3em] opacity-40 mb-2">BACK AGAIN</p>
+                <p className="text-xs tracking-[0.3em] opacity-40 mb-2">BACK AGAIN</p>
                 <h2 className="text-3xl md:text-5xl font-semibold leading-[0.95]">Recently<br />Viewed</h2>
               </div>
             </div>
@@ -485,7 +521,7 @@ export default function ProductDetailPage() {
           <div className="px-4 md:px-[4vw] py-12 md:py-20 border-t border-[#2a2520]/10">
             <div className="flex items-end justify-between mb-8">
               <div>
-                <p className="text-[10px] md:text-xs tracking-[0.3em] opacity-40 mb-2">COMPLETE THE LOOK</p>
+                <p className="text-xs tracking-[0.3em] opacity-40 mb-2">COMPLETE THE LOOK</p>
                 <h2 className="text-3xl md:text-5xl font-semibold leading-[0.95]">You May<br />Also Like</h2>
               </div>
               <Link to="/shop" className="text-xs md:text-sm tracking-[0.2em] opacity-40 hover:opacity-80 transition-opacity hidden md:block">
@@ -538,7 +574,7 @@ export default function ProductDetailPage() {
               : 'bg-[#2a2520] text-white'
           }`}
         >
-          {product.stock <= 0 ? 'OUT OF STOCK' : added ? 'ADDED ✓' : 'ADD TO CART'}
+          {product.stock <= 0 ? 'OUT OF STOCK' : added ? 'ADDED ✓' : 'ADD TO KIT'}
         </button>
       </div>
 

@@ -5,9 +5,14 @@ import circle from '/src/assets/circle.svg';
 import arrow from '/src/assets/arrow.svg';
 
 const ROUTE_MAP = {
+  ABOUT: '/about',
   FAQ: '/faq',
+  RETURNS: '/returns',
   CONTACTS: '/contact',
   'TRACK ORDER': '/track-order',
+  TERMS: '/terms',
+  PRIVACY: '/privacy',
+  COOKIE: '/cookies',
 };
 
 function HoverLink({ label }) {
@@ -52,7 +57,7 @@ function Footer() {
     }
   };
 
-  const leftLinks = ['FAQ', 'RETURNS', 'CONTACTS', 'TRACK ORDER'];
+  const leftLinks = ['ABOUT', 'FAQ', 'RETURNS', 'CONTACTS', 'TRACK ORDER'];
   const rightLinks = ['TERMS', 'PRIVACY', 'COOKIE'];
   const socialLinks = [
     { name: 'IG', url: '#' },
@@ -61,7 +66,7 @@ function Footer() {
   ];
 
   return (
-    <footer className="relative min-h-[40vh] md:h-[60vh] bg-[#ede6da] flex flex-col md:flex-row justify-between items-start md:items-center px-6 md:px-[5vw] py-8 md:py-0 z-50 gap-8 md:gap-0">
+    <footer className="relative min-h-[40vh] md:h-[60vh] bg-[#f5efe6] flex flex-col md:flex-row justify-between items-start md:items-center px-6 md:px-[5vw] py-8 md:py-0 z-50 gap-8 md:gap-0">
       <div className="flex flex-col justify-between h-auto md:h-[40vh] gap-6 md:gap-0">
         <img className="w-8 md:w-[4vw]" src={mail} alt="mail" loading="lazy" decoding="async" />
 

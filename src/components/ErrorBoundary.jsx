@@ -12,7 +12,12 @@ export class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('ErrorBoundary caught:', error, errorInfo);
+    if (import.meta.env.DEV) {
+      console.error('ErrorBoundary caught message:', error?.message);
+      console.error('ErrorBoundary caught stack:', error?.stack);
+      console.error('ErrorBoundary caught info:', errorInfo);
+    }
+    // TODO: Send to error tracking service (Sentry, LogRocket, etc.)
   }
 
   render() {

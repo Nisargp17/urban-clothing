@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../store/authSlice';
-import GooeyCursor from '../../components/GooeyCursor';
-import { CursorLabel } from '../../components/CursorLabel';
 
 const NAV_ITEMS = [
   { to: '/admin', label: 'Dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z M14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z M4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z M14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
@@ -140,10 +138,6 @@ export default function AdminLayout() {
         </main>
       </div>
     </div>
-
-      {/* Cursor overlays — rendered last so they stack above everything */}
-      <GooeyCursor cursorColor="#ffffff" adaptive={false} />
-      <CursorLabel />
     </React.Fragment>
   );
 }

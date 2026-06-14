@@ -41,7 +41,7 @@ export function useScrollAnimation(options = {}) {
         if (st.trigger === element) st.kill();
       });
     };
-  }, []);
+  }, [options]);
 
   return ref;
 }
@@ -65,7 +65,7 @@ export function useFadeInOnMount(options = {}) {
     const tween = gsap.to(element, { ...to, duration, ease, delay });
 
     return () => tween.kill();
-  }, []);
+  }, [options]);
 
   return ref;
 }

@@ -14,7 +14,7 @@ export function useLocalStorage(key, initialValue) {
     try {
       window.localStorage.setItem(key, JSON.stringify(storedValue));
     } catch (error) {
-      console.error('Error saving to localStorage:', error);
+      if (import.meta.env.DEV) console.error('Error saving to localStorage:', error);
     }
   }, [key, storedValue]);
 

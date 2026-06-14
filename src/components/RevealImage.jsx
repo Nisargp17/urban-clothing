@@ -9,19 +9,20 @@ export function RevealImage({ src, alt, className = '', direction = 'left' }) {
   const containerRef = useRef(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const el = containerRef.current;
+    if (!el) return;
     const preset = GSAP_PRESETS.clipReveal;
     const clipFrom = direction === 'left' ? preset.fromLeft : preset.fromRight;
 
     const tween = gsap.fromTo(
-      containerRef.current,
+      el,
       clipFrom,
       {
         ...preset.to,
         duration: preset.duration,
         ease: preset.ease,
         scrollTrigger: {
-          trigger: containerRef.current,
+          trigger: el,
           ...preset.trigger,
         },
       }
@@ -30,7 +31,7 @@ export function RevealImage({ src, alt, className = '', direction = 'left' }) {
     return () => {
       tween.kill();
       ScrollTrigger.getAll().forEach((st) => {
-        if (st.trigger === containerRef.current) st.kill();
+        if (st.trigger === el) st.kill();
       });
     };
   }, [direction]);

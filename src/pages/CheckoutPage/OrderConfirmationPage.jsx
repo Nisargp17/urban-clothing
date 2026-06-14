@@ -1,26 +1,37 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useGetOrderByIdQuery } from '../../store/apiSlice';
 import { formatPrice } from '../../utils/formatPrice';
+import { KitAssemblyRitual } from '../../components/KitAssemblyRitual';
 
 export default function OrderConfirmationPage() {
   const { orderId } = useParams();
-  const [order, setOrder] = useState(null);
+  const [showRitual, setShowRitual] = useState(true);
+  const { data, isLoading, error } = useGetOrderByIdQuery(orderId);
+  const order = data?.order;
 
-  useEffect(() => {
-    const saved = localStorage.getItem('lastOrder');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed.orderId === orderId) setOrder(parsed);
-      } catch { /* ignore */ }
-    }
-  }, [orderId]);
+  if (showRitual) {
+    return <KitAssemblyRitual orderId={orderId} onComplete={() => setShowRitual(false)} />;
+  }
 
-  if (!order) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#f5efe6] flex flex-col items-center justify-center px-6 pt-20 text-center">
+        <div className="animate-pulse">
+          <div className="w-48 h-6 bg-[#2a2520]/10 rounded mb-3 mx-auto" />
+          <div className="w-32 h-4 bg-[#2a2520]/10 rounded mx-auto" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !order) {
     return (
       <div className="min-h-screen bg-[#f5efe6] flex flex-col items-center justify-center px-6 pt-20 text-center">
         <h2 className="text-2xl font-bold tracking-[0.1em]">ORDER NOT FOUND</h2>
-        <p className="text-sm text-[#2a2520]/50 mt-2">We could not find details for this order.</p>
+        <p className="text-sm text-[#2a2520]/50 mt-2">
+          {error?.data?.message || 'We could not find details for this order.'}
+        </p>
         <Link
           to="/"
           className="mt-6 px-6 py-3 bg-[#2a2520] text-white text-xs tracking-[0.15em] font-medium hover:bg-[#c4a35a] hover:text-[#2a2520] transition-colors"
@@ -58,14 +69,14 @@ export default function OrderConfirmationPage() {
           <h3 className="text-sm font-bold tracking-[0.15em] mb-4">ORDER DETAILS</h3>
 
           <div className="space-y-3 border-b border-[#2a2520]/10 pb-4 mb-4">
-            {order.items.map((item) => (
-              <div key={item.cartItemId} className="flex gap-3">
+            {order.items?.map((item, idx) => (
+              <div key={item._id || item.product || idx} className="flex gap-3">
                 <div className="w-12 h-12 border border-[#2a2520]/20 flex-shrink-0 overflow-hidden">
-                  <img src={item.image || ''} alt={item.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                  <img src={item.img || item.image || ''} alt={item.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">{item.title}</p>
-                  <p className="text-[10px] opacity-50">Qty: {item.quantity}</p>
+                  <p className="text-[10px] opacity-50">Qty: {item.quantity}{item.size ? ` | Size: ${item.size}` : ''}</p>
                 </div>
                 <span className="text-xs font-medium">{formatPrice(item.price * item.quantity)}</span>
               </div>
@@ -75,28 +86,20 @@ export default function OrderConfirmationPage() {
           <div className="space-y-2 text-sm border-b border-[#2a2520]/10 pb-4 mb-4">
             <div className="flex justify-between opacity-60">
               <span>Subtotal</span>
-              <span>{formatPrice(order.totalPrice)}</span>
-            </div>
-            <div className="flex justify-between opacity-60">
-              <span>Shipping</span>
-              <span>{order.shipping === 0 ? 'Free' : formatPrice(order.shipping)}</span>
-            </div>
-            <div className="flex justify-between opacity-60">
-              <span>Tax</span>
-              <span>{formatPrice(order.tax)}</span>
+              <span>{formatPrice(order.totalAmount)}</span>
             </div>
             <div className="flex justify-between font-bold pt-2">
               <span>Total</span>
-              <span>{formatPrice(order.grandTotal)}</span>
+              <span>{formatPrice(order.totalAmount)}</span>
             </div>
           </div>
 
           <div className="space-y-2 text-sm">
             <p className="text-[10px] tracking-[0.15em] text-[#2a2520]/40 uppercase">SHIPPING TO</p>
-            <p className="font-medium">{order.shippingInfo.fullName}</p>
-            <p className="opacity-60">{order.shippingInfo.address}</p>
-            <p className="opacity-60">{order.shippingInfo.city}, {order.shippingInfo.state} — {order.shippingInfo.pincode}</p>
-            <p className="opacity-60">{order.shippingInfo.phone}</p>
+            <p className="font-medium">{order.shippingAddress?.name || order.shippingInfo?.fullName}</p>
+            <p className="opacity-60">{order.shippingAddress?.address || order.shippingInfo?.address}</p>
+            <p className="opacity-60">{order.shippingAddress?.city || order.shippingInfo?.city}, {order.shippingAddress?.state || order.shippingInfo?.state} — {order.shippingAddress?.pincode || order.shippingInfo?.pincode}</p>
+            <p className="opacity-60">{order.shippingAddress?.phone || order.shippingInfo?.phone}</p>
           </div>
         </div>
 

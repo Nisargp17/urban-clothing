@@ -9,7 +9,8 @@ export function AnimatedCounter({ target, suffix = '', label, delay = 0 }) {
   const ref = useRef(null);
 
   useEffect(() => {
-    if (!ref.current) return;
+    const el = ref.current;
+    if (!el) return;
     const preset = GSAP_PRESETS.counter;
     const obj = { val: 0 };
 
@@ -19,7 +20,7 @@ export function AnimatedCounter({ target, suffix = '', label, delay = 0 }) {
       ease: preset.ease,
       delay,
       scrollTrigger: {
-        trigger: ref.current,
+        trigger: el,
         ...preset.trigger,
       },
       onUpdate: () => {
@@ -32,7 +33,7 @@ export function AnimatedCounter({ target, suffix = '', label, delay = 0 }) {
     return () => {
       tween.kill();
       ScrollTrigger.getAll().forEach((st) => {
-        if (st.trigger === ref.current) st.kill();
+        if (st.trigger === el) st.kill();
       });
     };
   }, [target, suffix, delay]);

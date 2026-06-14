@@ -2,5 +2,10 @@ User-agent: *
 Allow: /
 Disallow: /login
 Disallow: /register
+Disallow: /account
+Disallow: /orders
+Disallow: /checkout
+Disallow: /order-confirmation
+Disallow: /admin
 
 Sitemap: https://urbanclothing.com/sitemap.xml

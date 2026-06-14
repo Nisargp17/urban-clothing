@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import { useCartContext, useWishlistContext } from '../hooks/useRedux';
 import { useAuth } from '../hooks/useAuth';
+import { SoundToggle } from './SoundToggle';
 
 const NAV_LINKS = [
   { label: 'Home', path: '/' },
@@ -84,6 +84,13 @@ function Navbar({ onSearchClick }) {
                     ADMIN
                   </Link>
                 )}
+                <Link
+                  to="/account"
+                  className="opacity-50 hover:opacity-100 transition-opacity text-[11px] tracking-[0.15em] font-medium"
+                  title="My Account"
+                >
+                  ACCOUNT
+                </Link>
                 <button
                   onClick={logout}
                   className="opacity-50 hover:opacity-100 transition-opacity p-1"
@@ -109,12 +116,13 @@ function Navbar({ onSearchClick }) {
                 </span>
               )}
             </Link>
-            <button onClick={toggleDrawer} className="relative opacity-50 hover:opacity-100 transition-opacity p-1">
+            <SoundToggle />
+            <button id="cart-target" onClick={toggleDrawer} className="relative opacity-50 hover:opacity-100 transition-opacity p-1">
               <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
               {totalItems > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-[#c4a35a] text-[#2a2520] text-[0.5rem] font-bold rounded-full flex items-center justify-center">
+                <span className="cart-badge absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-[#c4a35a] text-[#2a2520] text-[0.5rem] font-bold rounded-full flex items-center justify-center">
                   {totalItems}
                 </span>
               )}
@@ -138,12 +146,13 @@ function Navbar({ onSearchClick }) {
                 </span>
               )}
             </Link>
-            <button onClick={toggleDrawer} className="relative p-1">
+            <SoundToggle />
+            <button id="cart-target" onClick={toggleDrawer} className="relative p-1">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
               {totalItems > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-[#c4a35a] text-[#2a2520] text-[0.5rem] font-bold rounded-full flex items-center justify-center">
+                <span className="cart-badge absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-[#c4a35a] text-[#2a2520] text-[0.5rem] font-bold rounded-full flex items-center justify-center">
                   {totalItems}
                 </span>
               )}
@@ -183,6 +192,13 @@ function Navbar({ onSearchClick }) {
                 <div className="block px-3 py-2.5 text-sm font-medium tracking-wider rounded-lg bg-[#2a2520]/5">
                   {user?.name?.toUpperCase() || 'USER'}
                 </div>
+                <Link
+                  to="/account"
+                  onClick={() => setMobileOpen(false)}
+                  className="block px-3 py-2.5 text-sm font-medium tracking-wider rounded-lg hover:bg-[#2a2520]/5 active:bg-[#2a2520]/10 active:scale-[0.98] transition-all duration-200"
+                >
+                  ACCOUNT
+                </Link>
                 <button
                   onClick={() => {
                     logout();

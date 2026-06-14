@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 
-const isHoverDevice = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-
 const GooeyCursor = ({ cursorColor: propColor = "#f5efe6", adaptive = true }) => {
   const TAIL_LENGTH = 20;
   const cursorRef = useRef(null);

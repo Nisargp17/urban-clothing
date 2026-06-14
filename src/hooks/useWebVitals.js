@@ -40,7 +40,7 @@ export function useWebVitals() {
         lcpObserver.disconnect();
         fidObserver.disconnect();
       };
-    } catch (e) {
+    } catch {
       // Ignore unsupported browsers
     }
   }, []);

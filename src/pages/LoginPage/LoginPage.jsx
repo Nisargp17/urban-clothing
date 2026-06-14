@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { SEO } from '../../components/SEO';
 import heroImg from '/src/assets/shoe1.jpg';
 import { useAuth } from '../../hooks/useAuth';
@@ -8,13 +8,18 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [focusedField, setFocusedField] = useState(null);
   const { login, isLoading, error } = useAuth();
+  const location = useLocation();
+  const redirectTo = location.state?.from || '/';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await login({
-      email: formData.email,
-      password: formData.password,
-    });
+    await login(
+      {
+        email: formData.email,
+        password: formData.password,
+      },
+      { redirectTo }
+    );
   };
 
   const inputClasses = (field) =>

@@ -7,7 +7,6 @@
 
 body {
   background-color: #fcf9ee;
-  cursor: none;
   overflow-x: hidden;
 }
 
@@ -107,10 +106,11 @@ html {
   border-width: 0;
 }
 
-/* Active button press state */
+/* Active button press state — The "Press" */
 button:active:not(:disabled),
+[role="button"]:active,
 a:active {
-  transform: scale(0.96);
+  transform: scale(0.97) translateY(1px);
   transition: transform 0.1s ease;
 }
 
@@ -123,12 +123,22 @@ img[data-loading="true"] {
   opacity: 0;
 }
 
+/* Ghost Input Focus */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #c4a35a;
+  box-shadow: 0 0 0 3px rgba(196, 163, 90, 0.15);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
 /* Button / link active tactile feedback */
 .btn-press {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .btn-press:active {
-  transform: scale(0.96) translateY(1px);
+  transform: scale(0.97) translateY(1px);
 }
 
 /* Prefers reduced motion */
@@ -154,4 +164,63 @@ img[data-loading="true"] {
 /* Smooth page transition helper */
 .page-transition-wrapper {
   will-change: transform, opacity, filter;
+}
+
+/* Gooey Cursor — only on hover-capable devices */
+@media (hover: hover) and (pointer: fine) {
+  .goo-dot {
+    transition: background-color 0.2s ease;
+  }
+
+  /* Link state: warm gold */
+  [data-state="link"] .goo-dot {
+    background-color: #d4b36a !important;
+  }
+
+  /* View state: bright gold */
+  [data-state="view"] .goo-dot {
+    background-color: #e8c878 !important;
+  }
+
+  /* Text state: muted */
+  [data-state="text"] .goo-dot {
+    background-color: #8a7a60 !important;
+    opacity: 0.5 !important;
+  }
+}
+
+/* Image Breathe — ambient slow zoom on product imagery */
+@keyframes image-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+.image-breathe {
+  animation: image-breathe 20s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image-breathe {
+    animation: none;
+  }
+}
+
+/* Dynamic Product Ambience — subtle gradient shift on PDP */
+@keyframes ambience-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.product-ambience {
+  background: radial-gradient(ellipse at 30% 20%, rgba(196, 163, 90, 0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 80%, rgba(42, 37, 32, 0.04) 0%, transparent 50%);
+  background-size: 200% 200%;
+  animation: ambience-shift 15s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-ambience {
+    animation: none;
+  }
 }

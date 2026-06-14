@@ -6,11 +6,8 @@ import {
   clearCart,
   toggleDrawer,
   setDrawerOpen,
-  hideToast,
 } from '../store/cartSlice';
 import {
-  addToWishlist,
-  removeFromWishlist,
   toggleWishlist,
 } from '../store/wishlistSlice';
 import { logout } from '../store/authSlice';

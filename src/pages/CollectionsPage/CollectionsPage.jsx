@@ -4,6 +4,8 @@ import gsap from 'gsap';
 import { SEO } from '../../components/SEO';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { COLLECTIONS } from '../../data/collections';
+import { useWorld } from '../../context/WorldContext';
+import { WORLDS } from '../../constants/worlds';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -12,8 +14,27 @@ const FILTERS = ['All', 'Mens', 'Womens', 'Unisex', 'SS/25', 'FW/24'];
 function Lightbox({ item, onClose, onPrev, onNext }) {
   const [isClosing, setIsClosing] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [activeHotspot, setActiveHotspot] = useState(null);
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
+  const closeTimerRef = useRef(null);
+
+  const hotspots = item.hotspots || [
+    { x: 35, y: 45, label: 'Genuine Leather', desc: 'Full-grain hide, vegetable tanned' },
+    { x: 62, y: 55, label: 'Trail Sole', desc: 'Military-grade rubber compound' },
+    { x: 48, y: 25, label: 'Gold Eyelet', desc: 'Reinforced brass hardware' },
+  ];
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setIsClosing(true);
+    closeTimerRef.current = setTimeout(onClose, 400);
+  }, [onClose]);
 
   useEffect(() => {
     setLoaded(false);
@@ -28,12 +49,7 @@ function Lightbox({ item, onClose, onPrev, onNext }) {
       document.body.style.overflow = '';
       window.removeEventListener('keydown', handleKey);
     };
-  }, [onPrev, onNext, item.id]);
-
-  const handleClose = () => {
-    setIsClosing(true);
-    setTimeout(onClose, 400);
-  };
+  }, [onPrev, onNext, item.id, handleClose]);
 
   // Touch swipe handlers
   const onTouchStart = (e) => {
@@ -103,12 +119,34 @@ function Lightbox({ item, onClose, onPrev, onNext }) {
               <span className="text-xs tracking-[0.3em] opacity-40">LOADING</span>
             </div>
           )}
-          <img
-            src={item.img}
-            alt={item.title}
-            onLoad={() => setLoaded(true)}
-            className={`w-full max-h-[65vh] object-contain transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-          />
+          <div className="relative">
+            <img
+              src={item.img}
+              alt={item.title}
+              onLoad={() => setLoaded(true)}
+              className={`w-full max-h-[65vh] object-contain transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+            />
+            {/* Hotspots */}
+            {loaded && hotspots.map((h, i) => (
+              <button
+                key={i}
+                onClick={(e) => { e.stopPropagation(); setActiveHotspot(activeHotspot === i ? null : i); }}
+                className="absolute w-6 h-6 -ml-3 -mt-3 flex items-center justify-center group"
+                style={{ left: `${h.x}%`, top: `${h.y}%` }}
+              >
+                <span className="absolute w-3 h-3 bg-[#c4a35a] rounded-full animate-ping opacity-40" />
+                <span className="relative w-3 h-3 bg-[#c4a35a] rounded-full border-2 border-white" />
+                {/* Tooltip */}
+                {activeHotspot === i && (
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 bg-[#2a2520] text-white p-3 text-left shadow-lg z-30">
+                    <p className="text-xs font-bold tracking-wider mb-1">{h.label}</p>
+                    <p className="text-[10px] opacity-70 leading-relaxed">{h.desc}</p>
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-[#2a2520] rotate-45" />
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="mt-5 text-center text-white px-4">
@@ -199,6 +237,7 @@ export default function CollectionsPage() {
   const [lightboxItem, setLightboxItem] = useState(null);
   const heroRef = useRef(null);
   const heroImgRef = useRef(null);
+  const { activeWorld, setWorld, world } = useWorld();
 
   const filtered = useMemo(
     () => activeFilter === 'All'
@@ -207,25 +246,20 @@ export default function CollectionsPage() {
     [activeFilter]
   );
 
-  // Parallax on hero image
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!heroImgRef.current) return;
-      const scrollY = window.scrollY;
-      heroImgRef.current.style.transform = `translateY(${scrollY * 0.3}px)`;
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   // Hero entrance animation
   useEffect(() => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const hero = heroRef.current;
     if (!hero) return;
 
     const title = hero.querySelector('.hero-title');
     const subtitle = hero.querySelector('.hero-subtitle');
     const meta = hero.querySelector('.hero-meta');
+
+    if (reduced) {
+      gsap.set([title, subtitle, meta], { y: 0, opacity: 1 });
+      return;
+    }
 
     gsap.set([title, subtitle, meta], { y: 60, opacity: 0 });
 
@@ -302,6 +336,31 @@ export default function CollectionsPage() {
           </svg>
         </div>
       </section>
+
+      {/* World Switcher */}
+      <div className="relative z-20 bg-[#f5efe6] border-b border-[#2a2520]/10 py-3 px-4 md:px-[4vw]">
+        <div className="flex items-center gap-2 md:gap-3 overflow-x-auto hide-scrollbar">
+          <span className="text-[10px] md:text-xs font-medium tracking-[0.2em] opacity-40 flex-shrink-0 mr-2">
+            WORLD
+          </span>
+          {Object.values(WORLDS).map((w) => (
+            <button
+              key={w.id}
+              onClick={() => setWorld(w.id)}
+              className={`flex-shrink-0 px-3 md:px-4 py-1 text-[11px] md:text-xs font-medium tracking-wider border transition-all ${
+                activeWorld === w.id
+                  ? 'bg-[#2a2520] text-white border-[#2a2520]'
+                  : 'bg-transparent text-[#2a2520] border-[#2a2520]/30 hover:border-[#2a2520]'
+              }`}
+            >
+              {w.label.toUpperCase()}
+            </button>
+          ))}
+          <span className="text-[10px] md:text-xs opacity-40 flex-shrink-0 ml-auto hidden md:block">
+            {world.tagline}
+          </span>
+        </div>
+      </div>
 
       {/* Filter Bar */}
       <div className="relative z-20 bg-[#f5efe6] border-b-2 border-[#2a2520]/10 py-4 px-4 md:px-[4vw]">

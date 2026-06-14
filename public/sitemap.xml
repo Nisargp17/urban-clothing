@@ -27,12 +27,32 @@
   </url>
   <url>
     <loc>https://urbanclothing.com/track-order</loc>
-    <priority>0.5</priority>
+    <priority>0.4</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://urbanclothing.com/orders</loc>
+    <loc>https://urbanclothing.com/about</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://urbanclothing.com/returns</loc>
+    <priority>0.4</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://urbanclothing.com/terms</loc>
     <priority>0.3</priority>
-    <changefreq>weekly</changefreq>
+    <changefreq>yearly</changefreq>
+  </url>
+  <url>
+    <loc>https://urbanclothing.com/privacy</loc>
+    <priority>0.3</priority>
+    <changefreq>yearly</changefreq>
+  </url>
+  <url>
+    <loc>https://urbanclothing.com/cookies</loc>
+    <priority>0.3</priority>
+    <changefreq>yearly</changefreq>
   </url>
 </urlset>

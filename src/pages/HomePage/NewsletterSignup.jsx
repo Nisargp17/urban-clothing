@@ -1,15 +1,23 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export function NewsletterSignup() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (email) {
       setSubmitted(true);
       setEmail('');
-      setTimeout(() => setSubmitted(false), 4000);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setSubmitted(false), 4000);
     }
   };
 

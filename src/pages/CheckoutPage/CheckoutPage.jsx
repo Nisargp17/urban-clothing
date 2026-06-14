@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { clearCart } from '../../store/cartSlice';
+import { useCreateOrderMutation } from '../../store/apiSlice';
 import { formatPrice } from '../../utils/formatPrice';
+import { SEO } from '../../components/SEO';
 
 const PAYMENT_METHODS = [
   { id: 'cod', label: 'Cash on Delivery', icon: 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z' },
@@ -14,7 +16,7 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { items, totalPrice } = useSelector((state) => state.cart);
-  const [loading, setLoading] = useState(false);
+  const [createOrder, { isLoading }] = useCreateOrderMutation();
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [form, setForm] = useState({
     fullName: '',
@@ -26,6 +28,7 @@ export default function CheckoutPage() {
     pincode: '',
   });
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
 
   const [couponCode, setCouponCode] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
@@ -65,6 +68,7 @@ export default function CheckoutPage() {
   const handleChange = (e) => {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
     setErrors((err) => ({ ...err, [e.target.name]: '' }));
+    setSubmitError('');
   };
 
   const validate = () => {
@@ -82,56 +86,66 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitError('');
     if (!validate()) return;
     if (items.length === 0) return;
 
-    setLoading(true);
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 1200));
-
-    const orderId = `URB-${Date.now().toString(36).toUpperCase()}`;
-    const order = {
-      orderId,
-      items: [...items],
-      totalPrice,
-      shipping,
-      tax,
-      grandTotal,
-      shippingInfo: { ...form },
-      paymentMethod,
-      date: new Date().toISOString(),
-    };
-
-    // Save to localStorage for confirmation page
-    localStorage.setItem('lastOrder', JSON.stringify(order));
-    // Also append to order history
     try {
-      const history = JSON.parse(localStorage.getItem('orderHistory') || '[]');
-      history.unshift(order);
-      localStorage.setItem('orderHistory', JSON.stringify(history.slice(0, 20)));
-    } catch { /* ignore */ }
-    dispatch(clearCart());
-    setLoading(false);
-    navigate(`/order-confirmation/${orderId}`);
+      const payload = {
+        items: items.map((item) => ({
+          product: item.productId || item.id || item._id,
+          quantity: item.quantity,
+          size: item.size || '',
+        })),
+        shippingAddress: {
+          name: form.fullName,
+          address: form.address,
+          city: form.city,
+          state: form.state,
+          pincode: form.pincode,
+          phone: form.phone,
+        },
+        paymentMethod,
+      };
+
+      const result = await createOrder(payload).unwrap();
+      const order = result?.order;
+      if (!order) {
+        setSubmitError('Order placed but no order data returned. Please check your orders.');
+        dispatch(clearCart());
+        navigate('/orders');
+        return;
+      }
+
+      dispatch(clearCart());
+      navigate(`/order-confirmation/${order.orderId || order._id}`);
+    } catch (err) {
+      setSubmitError(err?.data?.message || err?.error || 'Failed to place order. Please try again.');
+    }
   };
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-[#f5efe6] flex flex-col items-center justify-center px-6 pt-20 text-center">
-        <h2 className="text-2xl font-bold tracking-[0.1em]">YOUR CART IS EMPTY</h2>
-        <p className="text-sm text-[#2a2520]/50 mt-2">Add some items before checking out.</p>
-        <button
-          onClick={() => navigate('/shop')}
-          className="mt-6 px-6 py-3 bg-[#2a2520] text-white text-xs tracking-[0.15em] font-medium hover:bg-[#c4a35a] hover:text-[#2a2520] transition-colors"
-        >
-          CONTINUE SHOPPING
-        </button>
-      </div>
+      <>
+        <SEO title="Checkout" description="Complete your purchase." pathname="/checkout" />
+        <div className="min-h-screen bg-[#f5efe6] flex flex-col items-center justify-center px-6 pt-20 text-center">
+          <h2 className="text-2xl font-bold tracking-[0.1em]">YOUR KIT IS AT BASE CAMP</h2>
+          <p className="text-sm text-[#2a2520]/50 mt-2">Gear up before you head out.</p>
+          <button
+            onClick={() => navigate('/shop')}
+            className="mt-6 px-6 py-3 bg-[#2a2520] text-white text-xs tracking-[0.15em] font-medium hover:bg-[#c4a35a] hover:text-[#2a2520] transition-colors"
+          >
+            EXPLORE THE KIT
+          </button>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f5efe6] pt-20 sm:pt-24">
+    <>
+      <SEO title="Checkout" description="Complete your purchase." pathname="/checkout" />
+      <div className="min-h-screen bg-[#f5efe6] pt-20 sm:pt-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <h2 className="text-xl font-bold tracking-[0.1em] mb-8">CHECKOUT</h2>
 
@@ -297,12 +311,24 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
+              {submitError && (
+                <p className="text-xs text-red-600 mt-3 tracking-wide">{submitError}</p>
+              )}
+
               <button
                 onClick={handleSubmit}
-                disabled={loading}
+                disabled={isLoading}
                 className="w-full mt-5 py-3 bg-[#2a2520] text-white text-xs tracking-[0.15em] font-medium hover:bg-[#c4a35a] hover:text-[#2a2520] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'PLACING ORDER...' : 'PLACE ORDER'}
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                    </svg>
+                    PLACING ORDER...
+                  </span>
+                ) : 'PLACE ORDER'}
               </button>
 
               {totalPrice < 2000 && (
@@ -314,6 +340,7 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

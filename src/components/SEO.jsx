@@ -1,9 +1,10 @@
 import { Helmet } from 'react-helmet-async';
 
+const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://urbanclothing.com').replace(/\/$/, '');
+
 export function SEO({ title, description, pathname = '', type = 'website', noindex = false }) {
-  const siteUrl = 'https://urbanclothing.com';
-  const fullUrl = `${siteUrl}${pathname}`;
-  const fullTitle = 'Urban Clothing';
+  const fullUrl = `${SITE_URL}${pathname}`;
+  const fullTitle = title ? `${title} | Urban Clothing` : 'Urban Clothing';
 
   return (
     <Helmet>

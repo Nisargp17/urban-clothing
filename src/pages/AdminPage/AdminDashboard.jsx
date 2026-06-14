@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useGetProductsQuery, useGetOrdersQuery } from '../../store/apiSlice';
+import { useGetAdminStatsQuery, useGetAdminRecentOrdersQuery } from '../../store/apiSlice';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 const CHART_DATA = [
@@ -13,40 +13,30 @@ const CHART_DATA = [
   { day: 'Sun', revenue: 45000, orders: 15 },
 ];
 
-function generateMockOrders(products = []) {
-  if (!Array.isArray(products) || products.length === 0) return [];
-  const statuses = ['pending', 'processing', 'shipped', 'delivered'];
-  const orders = [];
-  for (let i = 0; i < 8; i++) {
-    const product = products[i % products.length];
-    orders.push({
-      _id: `order_${i}`,
-      orderId: `URB-2025-${8842 + i}`,
-      customer: ['Alex R.', 'Sam T.', 'Jordan K.', 'Morgan L.', 'Casey W.', 'Taylor P.', 'Riley J.', 'Quinn M.'][i],
-      product: product.title || 'Unknown Product',
-      amount: (product.newPrice || product.price || 0) * (1 + (i % 3)),
-      status: statuses[i % statuses.length],
-      date: new Date(Date.now() - i * 86400000 * 2).toISOString(),
-    });
-  }
-  return orders;
-}
-
 const STATUS_STYLES = {
   pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  processing: 'bg-blue-100 text-blue-800 border-blue-300',
+  confirmed: 'bg-blue-100 text-blue-800 border-blue-300',
+  processing: 'bg-indigo-100 text-indigo-800 border-indigo-300',
   shipped: 'bg-purple-100 text-purple-800 border-purple-300',
+  out_for_delivery: 'bg-pink-100 text-pink-800 border-pink-300',
   delivered: 'bg-green-100 text-green-800 border-green-300',
+  cancelled: 'bg-red-100 text-red-800 border-red-300',
 };
 
-function StatCard({ label, value, change, positive }) {
+function StatCard({ label, value, change, positive, isLoading }) {
   return (
     <div className="border-2 border-[#2a2520] bg-white p-5 shadow-[4px_4px_0px_0px_#2a2520]">
       <p className="text-xs tracking-[0.15em] text-[#2a2520]/50 uppercase">{label}</p>
-      <p className="text-2xl font-bold mt-2 text-[#2a2520]">{value}</p>
-      <p className={`text-xs mt-1 font-medium ${positive ? 'text-green-600' : 'text-red-600'}`}>
-        {change}
-      </p>
+      {isLoading ? (
+        <div className="h-8 mt-2 bg-[#2a2520]/10 animate-pulse" />
+      ) : (
+        <p className="text-2xl font-bold mt-2 text-[#2a2520]">{value}</p>
+      )}
+      {!isLoading && (
+        <p className={`text-xs mt-1 font-medium ${positive ? 'text-green-600' : 'text-red-600'}`}>
+          {change}
+        </p>
+      )}
     </div>
   );
 }
@@ -54,28 +44,31 @@ function StatCard({ label, value, change, positive }) {
 const MemoStatCard = memo(StatCard);
 
 export default function AdminDashboard() {
-  const { data: productsData } = useGetProductsQuery();
-  const { data: ordersData } = useGetOrdersQuery();
-  const products = productsData?.products || productsData || [];
-  const orders = ordersData?.orders || ordersData || [];
+  const {
+    data: statsData,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useGetAdminStatsQuery();
+  const {
+    data: recentData,
+    isLoading: recentLoading,
+    error: recentError,
+  } = useGetAdminRecentOrdersQuery();
 
   const recentOrders = useMemo(() => {
-    if (orders.length > 0) return orders.slice(0, 5);
-    return generateMockOrders(products).slice(0, 5);
-  }, [orders, products]);
+    const raw = recentData?.data || recentData?.orders || [];
+    return Array.isArray(raw) ? raw : [];
+  }, [recentData]);
 
   const statCards = useMemo(() => {
-    const totalOrders = orders.length > 0 ? String(orders.length) : '156';
-    const pendingOrders = orders.length > 0
-      ? String(orders.filter((o) => o.status === 'pending').length)
-      : '12';
+    const stats = statsData?.data || {};
     return [
-      { label: 'Total Orders', value: totalOrders, change: '+12%', positive: true },
-      { label: 'Total Revenue', value: '₹284,750', change: '+8.5%', positive: true },
-      { label: 'Total Products', value: String(products.length || 0), change: '+3', positive: true },
-      { label: 'Pending Orders', value: pendingOrders, change: '-2', positive: false },
+      { label: 'Total Orders', value: String(stats.totalOrders ?? 0), change: '+12%', positive: true },
+      { label: 'Total Revenue', value: `₹${(stats.totalRevenue ?? 0).toLocaleString()}`, change: '+8.5%', positive: true },
+      { label: 'Total Products', value: String(stats.totalProducts ?? 0), change: '+3', positive: true },
+      { label: 'Pending Orders', value: String(stats.pendingOrders ?? 0), change: '-2', positive: false },
     ];
-  }, [orders, products]);
+  }, [statsData]);
 
   return (
     <div className="space-y-8">
@@ -84,10 +77,16 @@ export default function AdminDashboard() {
         <p className="text-sm text-[#2a2520]/40 mt-1">Overview of your store performance</p>
       </div>
 
+      {statsError && (
+        <div className="text-xs text-red-600 border border-red-200 bg-red-50 px-4 py-3">
+          Failed to load dashboard stats. {statsError.data?.message || statsError.error || 'Please try again.'}
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((card) => (
-          <MemoStatCard key={card.label} {...card} />
+          <MemoStatCard key={card.label} {...card} isLoading={statsLoading} />
         ))}
       </div>
 
@@ -103,38 +102,66 @@ export default function AdminDashboard() {
           </Link>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[#2a2520]/10 text-left text-xs tracking-[0.1em] text-[#2a2520]/40">
-                <th className="p-4 font-medium">ORDER</th>
-                <th className="p-4 font-medium">CUSTOMER</th>
-                <th className="p-4 font-medium">PRODUCT</th>
-                <th className="p-4 font-medium">AMOUNT</th>
-                <th className="p-4 font-medium">STATUS</th>
-                <th className="p-4 font-medium">DATE</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentOrders.map((order) => (
-                <tr key={order._id} className="border-b border-[#2a2520]/5 hover:bg-[#f5efe6] transition-colors">
-                  <td className="p-4 font-medium">{order.orderId}</td>
-                  <td className="p-4">{order.customer}</td>
-                  <td className="p-4 text-xs opacity-70 truncate max-w-[200px]">{order.product}</td>
-                  <td className="p-4 font-medium">₹{order.amount.toLocaleString()}</td>
-                  <td className="p-4">
-                    <span className={`inline-block px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase border ${STATUS_STYLES[order.status]}`}>
-                      {order.status}
-                    </span>
-                  </td>
-                  <td className="p-4 text-xs opacity-60">
-                    {new Date(order.date).toLocaleDateString()}
-                  </td>
+        {recentLoading && (
+          <div className="p-8 space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-10 bg-[#2a2520]/5 animate-pulse" />
+            ))}
+          </div>
+        )}
+        {recentError && (
+          <div className="p-8 text-center text-sm text-red-600">
+            Failed to load recent orders. {recentError.data?.message || recentError.error || 'Please try again.'}
+          </div>
+        )}
+        {!recentLoading && !recentError && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[#2a2520]/10 text-left text-xs tracking-[0.1em] text-[#2a2520]/40">
+                  <th className="p-4 font-medium">ORDER</th>
+                  <th className="p-4 font-medium">CUSTOMER</th>
+                  <th className="p-4 font-medium">PRODUCT</th>
+                  <th className="p-4 font-medium">AMOUNT</th>
+                  <th className="p-4 font-medium">STATUS</th>
+                  <th className="p-4 font-medium">DATE</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {recentOrders.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-sm opacity-40">
+                      No recent orders found.
+                    </td>
+                  </tr>
+                )}
+                {recentOrders.map((order) => (
+                  <tr key={order._id} className="border-b border-[#2a2520]/5 hover:bg-[#f5efe6] transition-colors">
+                    <td className="p-4 font-medium">{order.orderId}</td>
+                    <td className="p-4">
+                      {order.user?.name || order.customer || 'Unknown'}
+                      {order.user?.email && (
+                        <p className="text-[10px] opacity-50">{order.user.email}</p>
+                      )}
+                    </td>
+                    <td className="p-4 text-xs opacity-70 truncate max-w-[200px]">
+                      {order.items?.map((it) => it.title).join(', ') || order.product || 'N/A'}
+                    </td>
+                    <td className="p-4 font-medium">₹{(order.totalAmount ?? order.amount ?? 0).toLocaleString()}</td>
+                    <td className="p-4">
+                      <span className={`inline-block px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase border ${STATUS_STYLES[order.status] || STATUS_STYLES.pending}`}>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="p-4 text-xs opacity-60">
+                      {new Date(order.createdAt || order.date).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Charts */}

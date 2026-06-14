@@ -5,7 +5,7 @@ export function JsonLdOrganization() {
     name: 'Urban Clothing',
     url: 'https://urbanclothing.com',
     logo: 'https://urbanclothing.com/vite.svg',
-    description: 'Premium urban trekking footwear designed for the modern explorer.',
+    description: 'Premium urban trekking footwear engineered for the unplanned.',
     sameAs: [],
   };
 

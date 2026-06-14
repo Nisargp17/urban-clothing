@@ -5,22 +5,29 @@ import { HelmetProvider } from 'react-helmet-async';
 import { rehydrateAuth } from './store/authSlice';
 import './App.css';
 import Navbar from './components/NavBar';
-import GooeyCursor from './components/GooeyCursor';
+import { ContextualCursor } from './components/ContextualCursor';
+import { ContourLine } from './components/ContourLine';
+import { UnfoldTransition } from './components/UnfoldTransition';
 import { CartDrawer } from './components/CartDrawer';
 import { SearchOverlay } from './components/SearchOverlay';
 import { ScrollToTop } from './components/ScrollToTop';
 import { ScrollProgress } from './components/ScrollProgress';
-import { CursorLabel } from './components/CursorLabel';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoadingScreen } from './components/LoadingScreen';
 import { PageLoader } from './components/PageLoader';
 import { JsonLdOrganization } from './components/JsonLd';
 import { CartToast } from './components/CartToast';
+import { ApiErrorToast } from './components/ApiErrorToast';
 import { RequireAdmin } from './components/RequireAdmin';
+import { RequireAuth } from './components/RequireAuth';
+import { GuestOnly } from './components/GuestOnly';
 import { useLenis } from './hooks/useLenis';
 import { useWebVitals } from './hooks/useWebVitals';
 import HomePage from './pages/HomePage/HomePage';
 import gsap from 'gsap';
+import { KitFlyOverlay } from './components/KitFlyOverlay';
+import { Breadcrumbs } from './components/Breadcrumbs';
+import ComparePage from './pages/ComparePage/ComparePage';
 
 // Lazy load all non-landing pages for optimal bundle splitting
 const ShopPage = lazy(() => import('./pages/ShopPage/ShopPage'));
@@ -36,6 +43,16 @@ const TrackOrderPage = lazy(() => import('./pages/TrackOrderPage/TrackOrderPage'
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage/CheckoutPage'));
 const OrderConfirmationPage = lazy(() => import('./pages/CheckoutPage/OrderConfirmationPage'));
 const OrderHistoryPage = lazy(() => import('./pages/OrderHistoryPage/OrderHistoryPage'));
+const AccountPage = lazy(() => import('./pages/AccountPage/AccountPage'));
+
+// Static info / legal pages
+const AboutPage = lazy(() => import('./pages/AboutPage/AboutPage'));
+const ReturnsPage = lazy(() => import('./pages/ReturnsPage/ReturnsPage'));
+const TermsPage = lazy(() => import('./pages/TermsPage/TermsPage'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage/PrivacyPage'));
+const CookiePage = lazy(() => import('./pages/CookiePage/CookiePage'));
+const DesignSystemPage = lazy(() => import('./pages/DesignSystemPage/DesignSystemPage'));
+const EngineeringPage = lazy(() => import('./pages/EngineeringPage/EngineeringPage'));
 
 // Admin pages (separate chunk)
 const AdminLayout = lazy(() => import('./pages/AdminPage/AdminLayout'));
@@ -57,88 +74,116 @@ function AnimatedRoutes() {
   const location = useLocation();
   const mainRef = useRef(null);
   const [displayLocation, setDisplayLocation] = useState(location);
-  const [phase, setPhase] = useState('idle'); // 'idle' | 'exiting' | 'entering'
+  const [phase, setPhase] = useState('idle');
   const latestLocation = useRef(location);
   const isFirstRender = useRef(true);
 
-  // Always track latest location in ref
-  latestLocation.current = location;
+  useEffect(() => {
+    latestLocation.current = location;
+  });
 
-  // Phase 1: Start exit when route changes
   useEffect(() => {
     if (location.pathname !== displayLocation.pathname && phase === 'idle') {
       setPhase('exiting');
     }
-  }, [location, displayLocation, phase]);
+  }, [location.pathname, displayLocation.pathname, phase]);
 
-  // Phase 2: Exit animation — slide out + fade
+  // Same-page navigation (query string or hash) must update the rendered
+  // location immediately — without a transition. Otherwise <Routes location=
+  // {displayLocation}> keeps serving stale search params to pages, so Shop
+  // filters / sort / search / pagination never see the new ?page=, ?category=, etc.
+  useEffect(() => {
+    if (
+      location.pathname === displayLocation.pathname &&
+      (location.search !== displayLocation.search || location.hash !== displayLocation.hash)
+    ) {
+      setDisplayLocation(location);
+    }
+  }, [location, displayLocation]);
+
   useEffect(() => {
     if (phase !== 'exiting') return;
-
     const main = mainRef.current;
     if (!main) return;
 
-    const tl = gsap.timeline({
-      onComplete: () => {
-        setDisplayLocation(latestLocation.current);
-        window.scrollTo(0, 0);
-        setPhase('entering');
-      },
-    });
-
-    tl.to(main, { x: -40, opacity: 0, duration: 0.25, ease: 'power2.in' });
-
-    return () => tl.kill();
+    try {
+      const tl = gsap.timeline({
+        onComplete: () => {
+          setDisplayLocation(latestLocation.current);
+          window.scrollTo(0, 0);
+          setPhase('entering');
+        },
+      });
+      tl.to(main, { x: -40, opacity: 0, duration: 0.25, ease: 'power2.in' });
+      return () => tl.kill();
+    } catch (e) {
+      if (import.meta.env.DEV) console.error('GSAP exit error:', e);
+      setDisplayLocation(latestLocation.current);
+      setPhase('entering');
+    }
   }, [phase]);
 
-  // Phase 3: Enter animation — slide in from right + fade
   useEffect(() => {
     if (phase !== 'entering') return;
-
     const main = mainRef.current;
     if (!main) return;
 
-    // Skip entrance animation on first render (LoadingScreen handles it)
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      gsap.set(main, { x: 0, opacity: 1 });
+    try {
+      if (isFirstRender.current) {
+        isFirstRender.current = false;
+        gsap.set(main, { x: 0, opacity: 1 });
+        setPhase('idle');
+        return;
+      }
+
+      gsap.set(main, { x: 40, opacity: 0 });
+      gsap.to(main, {
+        x: 0,
+        opacity: 1,
+        duration: 0.4,
+        ease: 'power2.out',
+        onComplete: () => setPhase('idle'),
+      });
+    } catch (e) {
+      if (import.meta.env.DEV) console.error('GSAP enter error:', e);
       setPhase('idle');
-      return;
     }
-
-    // New content is now rendered but invisible — position it off-screen right
-    gsap.set(main, { x: 40, opacity: 0 });
-
-    gsap.to(main, {
-      x: 0,
-      opacity: 1,
-      duration: 0.4,
-      ease: 'power2.out',
-      onComplete: () => setPhase('idle'),
-    });
   }, [phase]);
 
   return (
-    <main ref={mainRef} className="will-change-transform">
-      <Suspense fallback={<PageLoader />}>
-        <Routes location={displayLocation}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/shop" element={<ShopPage />} />
-          <Route path="/collections" element={<CollectionsPage />} />
-          <Route path="/product/:id" element={<ProductDetailPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/faq" element={<FaqPage />} />
-          <Route path="/wishlist" element={<WishlistPage />} />
-          <Route path="/track-order" element={<TrackOrderPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
-          <Route path="/orders" element={<OrderHistoryPage />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </Suspense>
-    </main>
+    <>
+      <ContourLine active={phase !== 'idle'} />
+      <UnfoldTransition phase={phase} />
+      <main ref={mainRef} className="will-change-transform">
+        <Suspense fallback={<PageLoader />}>
+          <Routes location={displayLocation}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/shop" element={<ShopPage />} />
+            <Route path="/collections" element={<CollectionsPage />} />
+            <Route path="/product/:id" element={<ProductDetailPage />} />
+            <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
+            <Route path="/register" element={<GuestOnly><RegisterPage /></GuestOnly>} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/faq" element={<FaqPage />} />
+            <Route path="/wishlist" element={<WishlistPage />} />
+            <Route path="/track-order" element={<TrackOrderPage />} />
+            <Route path="/checkout" element={<RequireAuth><CheckoutPage /></RequireAuth>} />
+            <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
+            <Route path="/orders" element={<RequireAuth><OrderHistoryPage /></RequireAuth>} />
+            <Route path="/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
+            <Route path="/compare" element={<ComparePage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/returns" element={<ReturnsPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/cookies" element={<CookiePage />} />
+            <Route path="/design-system" element={<DesignSystemPage />} />
+            <Route path="/engineering" element={<EngineeringPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
+      </main>
+    </>
   );
 }
 
@@ -153,6 +198,18 @@ function MainApp() {
   useEffect(() => {
     dispatch(rehydrateAuth());
   }, [dispatch]);
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen((open) => !open);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   return (
     <>
@@ -169,10 +226,14 @@ function MainApp() {
       </a>
 
       <Navbar onSearchClick={() => setSearchOpen(true)} />
-      <GooeyCursor />
-      <CursorLabel />
+      <Breadcrumbs />
+      <ContextualCursor />
+      <KitFlyOverlay />
       <CartDrawer />
+      {/* Live region for screen readers */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only" />
       <CartToast />
+      <ApiErrorToast />
       <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
       <ScrollToTop />
       <div className="noise-overlay" aria-hidden="true" />

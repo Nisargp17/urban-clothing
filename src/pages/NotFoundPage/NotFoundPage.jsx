@@ -2,8 +2,6 @@ import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { SEO } from '../../components/SEO';
-import { TextScramble } from '../../components/TextScramble';
-import { MagneticButton } from '../../components/MagneticButton';
 
 export default function NotFoundPage() {
   const containerRef = useRef(null);
@@ -35,8 +33,8 @@ export default function NotFoundPage() {
           <p className="reveal text-[10px] md:text-xs tracking-[0.3em] opacity-40 mb-6">LOST IN TRANSIT</p>
 
           <h1 className="reveal text-5xl md:text-7xl lg:text-8xl font-semibold leading-[0.85] mb-6">
-            <TextScramble text="NOT" className="block" delay={0} />
-            <TextScramble text="FOUND" className="block" delay={200} />
+            <span className="block">NOT</span>
+            <span className="block">FOUND</span>
           </h1>
 
           <p className="reveal text-sm md:text-base opacity-50 leading-relaxed mb-10">
@@ -44,22 +42,18 @@ export default function NotFoundPage() {
           </p>
 
           <div className="reveal flex flex-col sm:flex-row gap-4 justify-center">
-            <MagneticButton strength={0.3}>
-              <button
-                onClick={() => window.history.back()}
-                className="inline-block px-8 py-3 border-2 border-[#2a2520] text-xs tracking-[0.2em] font-medium hover:bg-[#2a2520] hover:text-white transition-all"
-              >
-                GO BACK
-              </button>
-            </MagneticButton>
-            <MagneticButton strength={0.3}>
-              <Link
-                to="/"
-                className="inline-block px-8 py-3 bg-[#2a2520] text-white text-xs tracking-[0.2em] font-medium hover:bg-[#c4a35a] hover:text-[#2a2520] transition-all"
-              >
-                BACK TO HOME
-              </Link>
-            </MagneticButton>
+            <button
+              onClick={() => window.history.back()}
+              className="inline-block px-8 py-3 border-2 border-[#2a2520] text-xs tracking-[0.2em] font-medium hover:bg-[#2a2520] hover:text-white transition-all"
+            >
+              GO BACK
+            </button>
+            <Link
+              to="/"
+              className="inline-block px-8 py-3 bg-[#2a2520] text-white text-xs tracking-[0.2em] font-medium hover:bg-[#c4a35a] hover:text-[#2a2520] transition-all"
+            >
+              BACK TO HOME
+            </Link>
           </div>
         </div>
 

@@ -1,5 +1,8 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { useGetProductsQuery, useGetOrdersQuery } from '../../store/apiSlice';
+import { useState, useMemo } from 'react';
+import {
+  useGetAdminOrdersQuery,
+  useUpdateOrderStatusMutation,
+} from '../../store/apiSlice';
 import OrderDetailModal from './OrderDetailModal';
 
 const ORDER_STATUSES = ['pending', 'confirmed', 'processing', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'];
@@ -14,92 +17,82 @@ const STATUS_STYLES = {
   cancelled: 'bg-red-100 text-red-800 border-red-300',
 };
 
-function generateMockOrders(products = []) {
-  if (!Array.isArray(products) || products.length === 0) return [];
-  const customers = [
-    { name: 'Alex Rivera', email: 'alex@example.com', city: 'Mumbai' },
-    { name: 'Sam Thomas', email: 'sam@example.com', city: 'Delhi' },
-    { name: 'Jordan Kim', email: 'jordan@example.com', city: 'Bangalore' },
-    { name: 'Morgan Lee', email: 'morgan@example.com', city: 'Hyderabad' },
-    { name: 'Casey Williams', email: 'casey@example.com', city: 'Chennai' },
-    { name: 'Taylor Park', email: 'taylor@example.com', city: 'Pune' },
-    { name: 'Riley Jones', email: 'riley@example.com', city: 'Kolkata' },
-    { name: 'Quinn Mitchell', email: 'quinn@example.com', city: 'Ahmedabad' },
-    { name: 'Avery Brown', email: 'avery@example.com', city: 'Jaipur' },
-    { name: 'Sage Davis', email: 'sage@example.com', city: 'Surat' },
-  ];
-
-  return customers.map((customer, i) => {
-    const product = products[i % products.length];
-    return {
-      _id: `order_${i}`,
-      orderId: `URB-2025-${8842 + i}`,
-      customer: customer.name,
-      email: customer.email,
-      city: customer.city,
-      product: product.title || 'Unknown Product',
-      amount: (product.newPrice || product.price || 0) * (1 + (i % 3)),
-      status: ORDER_STATUSES[i % ORDER_STATUSES.length],
-      date: new Date(Date.now() - i * 86400000 * 2).toISOString(),
-    };
-  });
-}
-
 export default function AdminOrders() {
-  const { data: productsData } = useGetProductsQuery();
-  const { data: ordersData } = useGetOrdersQuery();
-  const products = productsData?.products || productsData || [];
-  const apiOrders = ordersData?.orders || ordersData || [];
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
 
-  const [orders, setOrders] = useState([]);
-  const hasSetOrders = useRef(false);
+  const {
+    data: apiData,
+    isLoading,
+    error,
+    refetch,
+  } = useGetAdminOrdersQuery({ page, limit });
+  const [updateStatus, { isLoading: isUpdating }] = useUpdateOrderStatusMutation();
 
-  useEffect(() => {
-    if (hasSetOrders.current) return;
-    if (apiOrders.length > 0) {
-      setOrders(apiOrders);
-      hasSetOrders.current = true;
-    } else if (products.length > 0) {
-      setOrders(generateMockOrders(products));
-      hasSetOrders.current = true;
-    }
-  }, [apiOrders, products]);
+  const orders = useMemo(() => {
+    const raw = apiData?.orders || apiData || [];
+    return Array.isArray(raw) ? raw : [];
+  }, [apiData]);
+
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [actionError, setActionError] = useState('');
 
-  const filtered = orders.filter((o) => {
-    if (statusFilter !== 'all' && o.status !== statusFilter) return false;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      return (
-        o.orderId?.toLowerCase().includes(q) ||
-        o.customer?.toLowerCase().includes(q) ||
-        o.product?.toLowerCase().includes(q)
-      );
+  const filtered = useMemo(() => {
+    return orders.filter((o) => {
+      if (statusFilter !== 'all' && o.status !== statusFilter) return false;
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        return (
+          o.orderId?.toLowerCase().includes(q) ||
+          o.user?.name?.toLowerCase().includes(q) ||
+          o.user?.email?.toLowerCase().includes(q) ||
+          o.items?.some((it) => it.title?.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
+  }, [orders, statusFilter, search]);
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    setActionError('');
+    try {
+      await updateStatus({ orderId, status: newStatus }).unwrap();
+    } catch (err) {
+      setActionError(err?.data?.message || err?.error || 'Failed to update status.');
     }
-    return true;
-  });
-
-  const handleStatusChange = (orderId, newStatus) => {
-    setOrders((prev) =>
-      prev.map((o) => (o._id === orderId ? { ...o, status: newStatus } : o))
-    );
   };
 
-  const statusCounts = ORDER_STATUSES.reduce((acc, s) => {
-    acc[s] = orders.filter((o) => o.status === s).length;
-    return acc;
-  }, {});
+  const statusCounts = useMemo(() => {
+    return ORDER_STATUSES.reduce((acc, s) => {
+      acc[s] = orders.filter((o) => o.status === s).length;
+      return acc;
+    }, {});
+  }, [orders]);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold tracking-[0.1em]">ORDERS</h2>
-          <p className="text-sm text-[#2a2520]/40 mt-1">{orders.length} total orders</p>
+          <p className="text-sm text-[#2a2520]/40 mt-1">
+            {isLoading ? 'Loading...' : `${orders.length} total orders`}
+          </p>
         </div>
       </div>
+
+      {error && (
+        <div className="text-xs text-red-600 border border-red-200 bg-red-50 px-4 py-3 flex items-center justify-between">
+          <span>Failed to load orders. {error.data?.message || error.error || 'Please try again.'}</span>
+          <button onClick={refetch} className="underline font-medium">Retry</button>
+        </div>
+      )}
+      {actionError && (
+        <div className="text-xs text-red-600 border border-red-200 bg-red-50 px-4 py-3">
+          {actionError}
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 border-b-2 border-[#2a2520]/10 pb-4">
@@ -143,65 +136,102 @@ export default function AdminOrders() {
 
       {/* Orders table */}
       <div className="border-2 border-[#2a2520] bg-white overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b-2 border-[#2a2520]/10 text-left text-xs tracking-[0.1em] text-[#2a2520]/40">
-              <th className="p-4 font-medium">ORDER</th>
-              <th className="p-4 font-medium">CUSTOMER</th>
-              <th className="p-4 font-medium">PRODUCT</th>
-              <th className="p-4 font-medium">AMOUNT</th>
-              <th className="p-4 font-medium">STATUS</th>
-              <th className="p-4 font-medium">DATE</th>
-              <th className="p-4 font-medium text-right">ACTION</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((order) => (
-              <tr key={order._id} className="border-b border-[#2a2520]/5 hover:bg-[#f5efe6] transition-colors">
-                <td className="p-4">
-                  <span className="font-medium text-xs">{order.orderId}</span>
-                </td>
-                <td className="p-4">
-                  <p className="text-xs font-medium">{order.customer}</p>
-                  <p className="text-[10px] opacity-50">{order.email}</p>
-                </td>
-                <td className="p-4 text-xs opacity-70 truncate max-w-[180px]">{order.product}</td>
-                <td className="p-4 text-xs font-medium">₹{order.amount.toLocaleString()}</td>
-                <td className="p-4">
-                  <span className={`inline-block px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase border ${STATUS_STYLES[order.status]}`}>
-                    {order.status}
-                  </span>
-                </td>
-                <td className="p-4 text-xs opacity-60">
-                  {new Date(order.date).toLocaleDateString()}
-                </td>
-                <td className="p-4 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      onClick={() => setSelectedOrder(order)}
-                      className="px-2 py-1 text-[10px] border border-[#2a2520] hover:bg-[#2a2520] hover:text-white transition-colors"
-                    >
-                      VIEW
-                    </button>
-                    <select
-                      value={order.status}
-                      onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                      className="text-[10px] tracking-wider uppercase border-2 border-[#2a2520]/20 px-2 py-1 outline-none focus:border-[#2a2520] bg-white"
-                    >
-                      {ORDER_STATUSES.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                  </div>
-                </td>
-              </tr>
+        {isLoading && (
+          <div className="p-8 space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-12 bg-[#2a2520]/5 animate-pulse" />
             ))}
-          </tbody>
-        </table>
+          </div>
+        )}
+        {!isLoading && (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b-2 border-[#2a2520]/10 text-left text-xs tracking-[0.1em] text-[#2a2520]/40">
+                <th className="p-4 font-medium">ORDER</th>
+                <th className="p-4 font-medium">CUSTOMER</th>
+                <th className="p-4 font-medium">PRODUCTS</th>
+                <th className="p-4 font-medium">AMOUNT</th>
+                <th className="p-4 font-medium">STATUS</th>
+                <th className="p-4 font-medium">DATE</th>
+                <th className="p-4 font-medium text-right">ACTION</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((order) => (
+                <tr key={order._id} className="border-b border-[#2a2520]/5 hover:bg-[#f5efe6] transition-colors">
+                  <td className="p-4">
+                    <span className="font-medium text-xs">{order.orderId}</span>
+                  </td>
+                  <td className="p-4">
+                    <p className="text-xs font-medium">{order.user?.name || order.customer || 'Unknown'}</p>
+                    <p className="text-[10px] opacity-50">{order.user?.email || order.email || ''}</p>
+                  </td>
+                  <td className="p-4 text-xs opacity-70 truncate max-w-[180px]">
+                    {order.items?.map((it) => it.title).join(', ') || order.product || 'N/A'}
+                  </td>
+                  <td className="p-4 text-xs font-medium">₹{(order.totalAmount ?? order.amount ?? 0).toLocaleString()}</td>
+                  <td className="p-4">
+                    <span className={`inline-block px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase border ${STATUS_STYLES[order.status] || STATUS_STYLES.pending}`}>
+                      {order.status}
+                    </span>
+                  </td>
+                  <td className="p-4 text-xs opacity-60">
+                    {new Date(order.createdAt || order.date).toLocaleDateString()}
+                  </td>
+                  <td className="p-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => setSelectedOrder(order)}
+                        className="px-2 py-1 text-[10px] border border-[#2a2520] hover:bg-[#2a2520] hover:text-white transition-colors"
+                      >
+                        VIEW
+                      </button>
+                      <select
+                        value={order.status}
+                        disabled={isUpdating}
+                        onChange={(e) => handleStatusChange(order.orderId || order._id, e.target.value)}
+                        className="text-[10px] tracking-wider uppercase border-2 border-[#2a2520]/20 px-2 py-1 outline-none focus:border-[#2a2520] bg-white disabled:opacity-50"
+                      >
+                        {ORDER_STATUSES.map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
-        {filtered.length === 0 && (
+        {!isLoading && filtered.length === 0 && (
           <div className="p-8 text-center text-sm opacity-40">
-            No orders match your filters.
+            {orders.length === 0 ? 'No orders found.' : 'No orders match your filters.'}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!isLoading && apiData?.pages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t-2 border-[#2a2520]/10">
+            <p className="text-xs opacity-40">
+              Page {apiData?.page ?? page} of {apiData?.pages ?? 1}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+                className="px-3 py-1.5 border-2 border-[#2a2520]/20 text-xs tracking-wider hover:border-[#2a2520] disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+              >
+                PREV
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(apiData?.pages ?? 1, p + 1))}
+                disabled={page >= (apiData?.pages ?? 1)}
+                className="px-3 py-1.5 border-2 border-[#2a2520]/20 text-xs tracking-wider hover:border-[#2a2520] disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+              >
+                NEXT
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -58,7 +58,7 @@ export default function RegisterPage() {
         <div className="w-full lg:w-1/2 flex items-center justify-center px-6 md:px-16 py-20">
           <div className="w-full max-w-sm">
             <div className="mb-10">
-              <p className="text-[10px] tracking-[0.3em] opacity-40 mb-2">ACCOUNT</p>
+              <p className="text-xs tracking-[0.3em] opacity-40 mb-2">ACCOUNT</p>
               <h1 className="text-4xl md:text-5xl font-semibold leading-[0.95]">Join<br />Us</h1>
             </div>
 

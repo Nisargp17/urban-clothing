@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { Link } from 'react-router-dom';
-import { MagneticButton } from '../../components/MagneticButton';
 import { HERO_IMAGES } from '../../data/collections';
 
 export function HeroSection() {
@@ -9,24 +8,20 @@ export function HeroSection() {
   const frameRef = useRef(null);
   const innerImgRef = useRef(null);
 
-  // Scroll parallax: image inside frame moves slower
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!innerImgRef.current) return;
-      const y = window.scrollY * 0.15;
-      innerImgRef.current.style.transform = `translateY(${y}px) scale(1.1)`;
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   // Entrance animation
   useEffect(() => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const container = containerRef.current;
     if (!container) return;
 
     const textEls = container.querySelectorAll('.hero-text');
     const frame = frameRef.current;
+
+    if (reduced) {
+      gsap.set(textEls, { x: 0, opacity: 1 });
+      gsap.set(frame, { x: 0, opacity: 1, rotation: 1 });
+      return;
+    }
 
     gsap.set(textEls, { x: -60, opacity: 0 });
     gsap.set(frame, { x: 80, opacity: 0, rotation: 2 });
@@ -61,7 +56,7 @@ export function HeroSection() {
       <div className="h-full flex flex-col md:flex-row items-center md:items-stretch pt-20 md:pt-0">
         {/* LEFT: Typography */}
         <div className="flex-1 flex flex-col justify-center px-4 md:pl-[10vw] md:pr-8 z-10">
-          <p className="hero-text text-[10px] md:text-xs tracking-[0.3em] opacity-40 mb-4 md:mb-6">
+          <p className="hero-text text-xs tracking-[0.3em] opacity-40 mb-4 md:mb-6">
             SS/25 COLLECTION
           </p>
 
@@ -81,27 +76,23 @@ export function HeroSection() {
           </div>
 
           <p className="hero-text text-sm md:text-base opacity-60 max-w-sm mt-6 md:mt-8 leading-relaxed">
-            Designed for the modern explorer. Where urban architecture meets outdoor terrain.
+            Engineered for 14km of unplanned terrain. Precision where the city ends and the trail begins.
           </p>
 
           {/* CTAs */}
           <div className="hero-text flex items-center gap-4 mt-6 md:mt-10">
-            <MagneticButton strength={0.4}>
-              <Link
-                to="/shop"
-                className="inline-block px-5 py-2.5 md:px-7 md:py-3 bg-[#2a2520] text-white text-xs tracking-[0.15em] font-medium hover:bg-[#c4a35a] hover:text-[#2a2520] transition-colors"
-              >
-                SHOP NOW
-              </Link>
-            </MagneticButton>
-            <MagneticButton strength={0.2}>
-              <Link
-                to="/collections"
-                className="inline-block text-xs tracking-[0.15em] font-medium underline underline-offset-4 opacity-60 hover:opacity-100 transition-opacity py-2.5 md:py-3"
-              >
-                VIEW LOOKBOOK
-              </Link>
-            </MagneticButton>
+            <Link
+              to="/shop"
+              className="inline-block px-5 py-2.5 md:px-7 md:py-3 bg-[#2a2520] text-white text-xs tracking-[0.15em] font-medium hover:bg-[#c4a35a] hover:text-[#2a2520] transition-colors"
+            >
+              EXPLORE THE KIT
+            </Link>
+            <Link
+              to="/collections"
+              className="inline-block text-xs tracking-[0.15em] font-medium underline underline-offset-4 opacity-60 hover:opacity-100 transition-opacity py-2.5 md:py-3"
+            >
+              THE LOOKBOOK
+            </Link>
           </div>
         </div>
 
@@ -121,7 +112,7 @@ export function HeroSection() {
                 className="w-full h-[120%] object-cover"
                 style={{ transform: 'translateY(0) scale(1.1)' }}
                 loading="eager"
-                fetchpriority="high"
+                fetchPriority="high"
               />
             </div>
 

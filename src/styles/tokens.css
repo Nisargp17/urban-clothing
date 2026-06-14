@@ -1,0 +1,71 @@
+/* Urban Clothing — Design Tokens */
+
+:root {
+  /* Brand Colors */
+  --color-bg: #f5efe6;
+  --color-bg-alt: #e8ddd0;
+  --color-text: #2a2520;
+  --color-accent: #c4a35a;
+  --color-accent-warm: #d4b36a;
+  --color-surface: #ffffff;
+  --color-error: #d4652a;
+
+  /* Seasonal Tokens (default = SS25) */
+  --season-bg: #f5efe6;
+  --season-accent: #c4a35a;
+  --season-text: #2a2520;
+  --season-image-filter: none;
+  --season-motion-speed: 1;
+
+  /* Motion */
+  --motion-instant: 0ms;
+  --motion-fast: 150ms;
+  --motion-normal: 300ms;
+  --motion-slow: 600ms;
+  --motion-ambient: 20s;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-out-sine: cubic-bezier(0.37, 0, 0.63, 1);
+
+  /* Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+  --space-10: 64px;
+  --space-12: 80px;
+  --space-16: 128px;
+
+  /* Typography */
+  --font-display: 'Savate', sans-serif;
+  --font-ui: 'Inter', 'Geist', sans-serif;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --text-3xl: 40px;
+}
+
+/* Autumn/Winter 25 */
+[data-season="aw25"] {
+  --season-bg: #e8ddd0;
+  --season-accent: #8a7a60;
+  --season-text: #3d342b;
+  --season-image-filter: contrast(1.05) brightness(0.95);
+  --season-motion-speed: 1.2;
+}
+
+/* Future (Concept) */
+[data-season="future"] {
+  --season-bg: #1a1a1a;
+  --season-accent: #c4a35a;
+  --season-text: #f0f0f0;
+  --season-image-filter: contrast(1.15) saturate(1.1);
+  --season-motion-speed: 0.8;
+}

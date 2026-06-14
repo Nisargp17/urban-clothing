@@ -5,10 +5,17 @@ import {
   useUpdateProductMutation,
   useDeleteProductMutation,
 } from '../../store/apiSlice';
+import { TableSkeleton } from '../../components/ProductSkeleton';
 import { formatPrice } from '../../utils/formatPrice';
 
 export default function AdminProducts() {
-  const { data: apiProducts = [], isLoading, error } = useGetProductsQuery();
+  const [adminPage] = useState(1);
+  const [adminLimit] = useState(100);
+
+  const { data: apiProducts = [], isLoading, error } = useGetProductsQuery({
+    page: adminPage,
+    limit: adminLimit,
+  });
   const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
   const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation();
@@ -237,6 +244,16 @@ export default function AdminProducts() {
 
       {/* Table */}
       <div className="border-2 border-[#2a2520] bg-white overflow-x-auto">
+        {isLoading && <TableSkeleton rows={6} cols={6} />}
+        {error && !isLoading && (
+          <div className="p-8 text-center text-xs text-red-600 tracking-wide">
+            Failed to load products. Please check your connection.
+          </div>
+        )}
+        {!isLoading && !error && filtered.length === 0 && (
+          <div className="p-8 text-center text-xs opacity-40 tracking-wide">No products found.</div>
+        )}
+        {!isLoading && !error && filtered.length > 0 && (
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b-2 border-[#2a2520]/10 text-left text-xs tracking-[0.1em] text-[#2a2520]/40">
@@ -249,23 +266,6 @@ export default function AdminProducts() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && (
-              <tr>
-                <td colSpan={6} className="p-8 text-center text-xs opacity-40 tracking-wide">Loading products...</td>
-              </tr>
-            )}
-            {error && (
-              <tr>
-                <td colSpan={6} className="p-8 text-center text-xs text-red-600 tracking-wide">
-                  Failed to load products. Please check your connection.
-                </td>
-              </tr>
-            )}
-            {!isLoading && !error && filtered.length === 0 && (
-              <tr>
-                <td colSpan={6} className="p-8 text-center text-xs opacity-40 tracking-wide">No products found.</td>
-              </tr>
-            )}
             {filtered.map((product) => {
               const productId = product.id || product._id;
               const imageUrl = product.img || product.image || '';
@@ -321,6 +321,7 @@ export default function AdminProducts() {
             })}
           </tbody>
         </table>
+        )}
       </div>
     </div>
   );

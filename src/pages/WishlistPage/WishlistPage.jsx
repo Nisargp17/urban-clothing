@@ -9,13 +9,13 @@ export default function WishlistPage() {
   const { wishlist, removeFromWishlist } = useWishlistContext();
   const { addToCart } = useCartContext();
   const { data: apiData } = useGetProductsQuery();
-  const products = apiData?.products || apiData || [];
 
   const wishlistProducts = useMemo(() => {
+    const products = apiData?.products || apiData || [];
     if (!Array.isArray(products)) return [];
     const map = new Map(products.map((p) => [p.id || p._id, p]));
     return wishlist.map((item) => map.get(item.id)).filter(Boolean);
-  }, [wishlist, products]);
+  }, [wishlist, apiData]);
 
   return (
     <>
@@ -24,7 +24,7 @@ export default function WishlistPage() {
         <div className="px-4 md:px-[6vw]">
           {/* Header */}
           <div className="mb-10 md:mb-14">
-            <p className="text-[10px] tracking-[0.3em] opacity-40 mb-2">SAVED ITEMS</p>
+            <p className="text-xs tracking-[0.3em] opacity-40 mb-2">SAVED ITEMS</p>
             <h1 className="text-4xl md:text-6xl font-semibold leading-[0.95] tracking-tight mb-3">
               Wishlist
             </h1>
@@ -68,7 +68,7 @@ export default function WishlistPage() {
                         />
                       </div>
                       <div className="p-4 md:p-5">
-                        <p className="text-[10px] tracking-[0.2em] opacity-40 mb-1">{product.category}</p>
+                        <p className="text-xs tracking-[0.2em] opacity-40 mb-1">{product.category}</p>
                         <h3 className="text-xl md:text-2xl font-semibold mb-2">{product.title}</h3>
                         <div className="flex items-center gap-2">
                           {product.oldPrice && (
@@ -76,7 +76,7 @@ export default function WishlistPage() {
                           )}
                           <span className="text-lg font-medium">{formatPrice(product.newPrice)}</span>
                           {discount > 0 && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 bg-[#c4a35a] text-[#2a2520]">-{discount}%</span>
+                            <span className="text-xs font-bold px-2 py-0.5 bg-[#c4a35a] text-[#2a2520]">-{discount}%</span>
                           )}
                         </div>
                       </div>
